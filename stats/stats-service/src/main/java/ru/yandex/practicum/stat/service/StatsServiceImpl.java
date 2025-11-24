@@ -11,7 +11,7 @@ import java.util.List;
 @Service
 @RequiredArgsConstructor
 public class StatsServiceImpl implements StatsService {
-    private final StatRepository statRepository;
+    private final StatsRepository statsRepository;
 
     @Override
     public void saveHit(EndpointHitCreate hitCreate) {
@@ -21,14 +21,14 @@ public class StatsServiceImpl implements StatsService {
                 .ip(hitCreate.getIp())
                 .created(hitCreate.getTimestamp())
                 .build();
-         statRepository.save(hit);
+         statsRepository.save(hit);
     }
 
     @Override
     public List<ViewStats> getStats(LocalDateTime start, LocalDateTime end, List<String> uris, boolean unique) {
         if (unique) {
-            return statRepository.findUniqueHits(start, end, uris);
+            return statsRepository.findUniqueHits(start, end, uris);
         }
-        return statRepository.findAllHits(start, end, uris);
+        return statsRepository.findAllHits(start, end, uris);
     }
 }

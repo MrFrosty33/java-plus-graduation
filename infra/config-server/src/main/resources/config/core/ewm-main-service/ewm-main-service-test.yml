@@ -17,9 +17,6 @@ spring:
     console:
       enabled: true
 
-stats:
-  service-id: stats-server
-
 logging:
   level:
     ru.yandex.practicum: TRACE

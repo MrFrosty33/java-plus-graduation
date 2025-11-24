@@ -1,31 +1,47 @@
 package ru.yandex.practicum.stats.client;
 
-import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.cloud.client.ServiceInstance;
+import org.springframework.cloud.client.discovery.DiscoveryClient;
 import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.retry.backoff.FixedBackOffPolicy;
+import org.springframework.retry.policy.MaxAttemptsRetryPolicy;
+import org.springframework.retry.support.RetryTemplate;
 import org.springframework.web.client.RestClient;
 import org.springframework.web.util.UriComponentsBuilder;
 import ru.yandex.practicum.stats.dto.EndpointHitCreate;
 import ru.yandex.practicum.stats.dto.ViewStats;
 
+import java.net.URI;
 import java.time.LocalDateTime;
 import java.util.List;
 
-@RequiredArgsConstructor(onConstructor_ = @Autowired)
 @Slf4j
 public class StatsClientImpl implements StatsClient {
     private final RestClient client;
-    @Value("${stat.server-url}")
-    private String serverUrl;
+    private final DiscoveryClient discoveryClient;
+    private final RetryTemplate retryTemplate;
 
-    public RestClient restClient() {
-        return RestClient.builder()
-                .baseUrl(serverUrl)
+    @Value("${stats.service-id}")
+    private String statsServiceId;
+
+    public StatsClientImpl(@Autowired DiscoveryClient discoveryClient) {
+        this.discoveryClient = discoveryClient;
+        this.client = RestClient.builder()
                 .build();
+        this.retryTemplate = new RetryTemplate();
+
+        FixedBackOffPolicy fixedBackOffPolicy = new FixedBackOffPolicy();
+        fixedBackOffPolicy.setBackOffPeriod(3000L);
+        retryTemplate.setBackOffPolicy(fixedBackOffPolicy);
+
+        MaxAttemptsRetryPolicy retryPolicy = new MaxAttemptsRetryPolicy();
+        retryPolicy.setMaxAttempts(3);
+        retryTemplate.setRetryPolicy(retryPolicy);
     }
 
     public ResponseEntity<Void> createHit(EndpointHitCreate endpointHitCreate) {
@@ -33,7 +49,7 @@ public class StatsClientImpl implements StatsClient {
 
         ResponseEntity<Void> result = client
                 .post()
-                .uri("/hit")
+                .uri(makeUri("/hit"))
                 .contentType(MediaType.APPLICATION_JSON)
                 .body(endpointHitCreate)
                 .retrieve()
@@ -58,7 +74,7 @@ public class StatsClientImpl implements StatsClient {
                 start, end, uris, unique);
 
         UriComponentsBuilder builder = UriComponentsBuilder
-                .fromUriString(serverUrl + "/stats")
+                .fromUri(makeUri("/stats"))
                 .queryParam("start", start)
                 .queryParam("end", end)
                 .queryParam("unique", unique);
@@ -83,5 +99,21 @@ public class StatsClientImpl implements StatsClient {
         }
 
         return result;
+    }
+
+    private URI makeUri(String path) {
+        ServiceInstance instance = retryTemplate.execute(cxt -> getStatsServiceInstance());
+        return URI.create("http://" + instance.getHost() + ":" + instance.getPort() + path);
+    }
+
+    private ServiceInstance getStatsServiceInstance() {
+        try {
+            return discoveryClient
+                    .getInstances(statsServiceId)
+                    .getFirst();
+        } catch (Exception exception) {
+            log.warn("Stats service with id: {} is unavailable", statsServiceId);
+            throw new RuntimeException("service with id:" + statsServiceId + " is unavailable");
+        }
     }
 }

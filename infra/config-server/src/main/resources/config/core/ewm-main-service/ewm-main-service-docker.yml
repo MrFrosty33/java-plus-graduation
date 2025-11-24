@@ -11,9 +11,6 @@ spring:
     username: ${SPRING_DATASOURCE_USERNAME}
     password: ${SPRING_DATASOURCE_PASSWORD}
 
-stats:
-  service-id: stats-server
-
 logging:
   level:
     ru.yandex.practicum: TRACE

@@ -8,7 +8,7 @@ import ru.yandex.practicum.stats.dto.ViewStats;
 import java.time.LocalDateTime;
 import java.util.List;
 
-public interface StatRepository extends JpaRepository<Hit, Long> {
+public interface StatsRepository extends JpaRepository<Hit, Long> {
     @Query("""
         SELECT new ru.yandex.practicum.stats.dto.ViewStats(h.app, h.uri, COUNT(h))
         FROM Hit h

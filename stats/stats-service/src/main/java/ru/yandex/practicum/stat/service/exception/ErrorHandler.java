@@ -28,7 +28,7 @@ public class ErrorHandler {
         String message = e.getBindingResult().getAllErrors().stream()
                 .map(DefaultMessageSourceResolvable::getDefaultMessage)
                 .collect(Collectors.joining(", "));
-        throw new StatValidationException(message);
+        throw new StatsValidationException(message);
     }
 
     @ExceptionHandler(ConstraintViolationException.class)
@@ -37,7 +37,7 @@ public class ErrorHandler {
                 .map(ConstraintViolation::getMessage)
                 .collect(Collectors.joining(", "));
 
-        throw new StatValidationException(message);
+        throw new StatsValidationException(message);
     }
 
     @ExceptionHandler({InvalidFormatException.class,
@@ -49,12 +49,12 @@ public class ErrorHandler {
             ValueInstantiationException.class
     })
     public void handleIllegalArgumentException(Exception e) {
-        throw new StatValidationException(e.getMessage());
+        throw new StatsValidationException(e.getMessage());
     }
 
     @ExceptionHandler
     @ResponseStatus(HttpStatus.BAD_REQUEST)
-    public ErrorResponse handleBadRequest(StatValidationException e) {
+    public ErrorResponse handleBadRequest(StatsValidationException e) {
         log.warn("400 Validation exception on Stat Service: {}", e.getMessage(), e);
         return new ErrorResponse(e.getMessage());
     }

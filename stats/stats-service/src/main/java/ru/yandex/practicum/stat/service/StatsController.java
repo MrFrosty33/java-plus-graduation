@@ -16,7 +16,7 @@ import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 import ru.yandex.practicum.stats.dto.EndpointHitCreate;
 import ru.yandex.practicum.stats.dto.ViewStats;
-import ru.yandex.practicum.stat.service.exception.StatValidationException;
+import ru.yandex.practicum.stat.service.exception.StatsValidationException;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -49,7 +49,7 @@ public class StatsController {
                                     @RequestParam(defaultValue = "false") boolean unique) {
         log.info("STAT CONTROLLER: Get stats: {}, {}, {}, {}", start, end, uris, unique);
         if (end.isBefore(start)) {
-            throw new StatValidationException("Start date must be before end date");
+            throw new StatsValidationException("Start date must be before end date");
         }
         return statsService.getStats(start, end, uris, unique);
     }
