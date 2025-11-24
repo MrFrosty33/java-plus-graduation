@@ -16,8 +16,9 @@
 	<version>1.0-SNAPSHOT</version>
 	<packaging>pom</packaging>
 	<modules>
-		<module>main-service</module>
 		<module>stat</module>
+		<module>infra</module>
+		<module>core</module>
 	</modules>
 
 	<properties>
