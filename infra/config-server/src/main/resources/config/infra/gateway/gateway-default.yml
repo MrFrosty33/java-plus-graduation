@@ -6,9 +6,9 @@ spring:
           enabled: true
       routes:
         - id: ewm_main_service_route
-          uri: lb://ewm-main-service
+          uri: lb://main-service
           predicates:
-            - Path=/ewm-main-service/**
+            - Path=/main-service/**
         - id: stats_service_route
           uri: lb://stats-service
           predicates:
