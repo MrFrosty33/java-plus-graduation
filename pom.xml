@@ -16,7 +16,7 @@
 	<version>1.0-SNAPSHOT</version>
 	<packaging>pom</packaging>
 	<modules>
-		<module>stat</module>
+		<module>stats</module>
 		<module>infra</module>
 		<module>core</module>
 	</modules>

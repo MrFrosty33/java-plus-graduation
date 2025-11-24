@@ -1,0 +1,26 @@
+spring:
+  cloud:
+    gateway:
+      discovery:
+        locator:
+          enabled: true
+      routes:
+        - id: ewm_main_service_route
+          uri: lb://ewm-main-service
+          predicates:
+            - Path=/ewm-main-service/**
+        - id: stats_service_route
+          uri: lb://stats-service
+          predicates:
+            - Path=/stats-service/**
+
+
+server:
+  port: 8080
+
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health, info, gateway

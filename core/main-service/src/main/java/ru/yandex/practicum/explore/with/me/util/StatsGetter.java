@@ -4,8 +4,8 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 import ru.yandex.practicum.explore.with.me.model.event.dto.EventViewsParameters;
-import ru.yandex.practicum.stat.client.StatClient;
-import ru.yandex.practicum.stat.dto.ViewStats;
+import ru.yandex.practicum.stats.client.StatsClient;
+import ru.yandex.practicum.stats.dto.ViewStats;
 
 import java.util.List;
 
@@ -13,11 +13,11 @@ import java.util.List;
 @RequiredArgsConstructor
 @Slf4j
 public class StatsGetter {
-    private final StatClient statClient;
+    private final StatsClient statsClient;
 
     public List<ViewStats> getEventViewStats(EventViewsParameters params) {
         log.info("STAT GETTER: get event view stats with params: {}", params);
-        return statClient.getStats(
+        return statsClient.getStats(
                 params.getStart(),
                 params.getEnd(),
                 params.getEventIdUris(),

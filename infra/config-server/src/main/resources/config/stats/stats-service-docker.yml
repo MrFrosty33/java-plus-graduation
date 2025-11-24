@@ -1,18 +1,12 @@
-server:
-  port: 0
-
 spring:
   sql:
     init:
       mode: always
   datasource:
     driver-class-name: org.postgresql.Driver
-    url: ${SPRING_DATASOURCE_URL}
-    username: ${SPRING_DATASOURCE_USERNAME}
-    password: ${SPRING_DATASOURCE_PASSWORD}
-
-stats:
-  service-id: stats-server
+    url: jdbc:postgresql://stats-db:5432/ewm_stats
+    username: stats
+    password: stats
 
 logging:
   level:

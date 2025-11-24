@@ -33,27 +33,42 @@ services:
       timeout: 3s
       retries: 5
 
-  # БД для stat сервиса
-  stat-db:
+  gateway-server:
+    build:
+      context: .
+      dockerfile: infra/gateway-server/Dockerfile
+    environment:
+      EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://discovery-server:8761/eureka/
+    healthcheck:
+      test: [ "CMD", "curl", "-f", "http://localhost:8080/actuator/health" ]
+      interval: 15s
+      timeout: 3s
+      retries: 5
+    depends_on:
+      config-server:
+        condition: service_healthy
+
+  # БД для stats сервиса
+  stats-db:
     image: postgres:16.1
     environment:
-      POSTGRES_DB: ewm_stat
-      POSTGRES_USER: stat
-      POSTGRES_PASSWORD: stat
+      POSTGRES_DB: ewm_stats
+      POSTGRES_USER: stats
+      POSTGRES_PASSWORD: stats
     ports:
       - "6542:5432"
 
-  # stat сервис
-  stat-server:
+  # stats сервис
+  stats-server:
     build:
       context: .
-      dockerfile: stat/Dockerfile
+      dockerfile: stats/Dockerfile
     environment:
       SPRING_PROFILES_ACTIVE: docker
       EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://discovery-server:8761/eureka/
-      SPRING_DATASOURCE_URL: jdbc:postgresql://stat-db:5432/ewm_stat
-      SPRING_DATASOURCE_USERNAME: stat
-      SPRING_DATASOURCE_PASSWORD: stat
+      SPRING_DATASOURCE_URL: jdbc:postgresql://stats-db:5432/ewm_stats
+      SPRING_DATASOURCE_USERNAME: stats
+      SPRING_DATASOURCE_PASSWORD: stats
     depends_on:
       config-server:
         condition: service_healthy
