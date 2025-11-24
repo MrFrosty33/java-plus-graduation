@@ -5,14 +5,10 @@ spring:
         locator:
           enabled: true
       routes:
-        - id: ewm_main_service_route
+        - id: main_service_route
           uri: lb://main-service
           predicates:
-            - Path=/main-service/**
-        - id: stats_service_route
-          uri: lb://stats-service
-          predicates:
-            - Path=/stats-service/**
+            - Path=/**
 
 
 server:
