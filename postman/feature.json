@@ -1,0 +1,1224 @@
+{
+  "info": {
+    "name": "Test Explore With Me - Event Comments API",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "User Comments",
+      "item": [
+        {
+          "name": "Create Comment",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "exec": [
+                  "const main = async () => {",
+                  "    const api = new API(pm);",
+                  "    const rnd = new RandomUtils();",
+                  "",
+                  "    try {",
+                  "        const organizer = await api.addUser(rnd.getUser());",
+                  "        const participant = await api.addUser(rnd.getUser());",
+                  "        pm.variables.set(\"userId\", participant.id);",
+                  "",
+                  "        const category = await api.addCategory(rnd.getCategory());",
+                  "        let event = await api.addEvent(organizer.id, {",
+                  "            ...rnd.getEvent(category.id),",
+                  "            eventDate: new Date(Date.now() + 24 * 3600 * 1000)",
+                  "                .toISOString()",
+                  "                .replace('T', ' ')",
+                  "                .replace(/\\.\\d+Z/, ''),",
+                  "            participantLimit: 10,",
+                  "            requestModeration: true",
+                  "        });",
+                  "",
+                  "        event = await api.publishEvent(event.id);",
+                  "",
+                  "        const request = await api.createRequest(participant.id, event.id);",
+                  "",
+                  "        await api.confirmRequests(organizer.id, event.id, {",
+                  "            requestIds: [request.id],",
+                  "            status: \"CONFIRMED\"",
+                  "        });",
+                  "",
+                  "        pm.variables.set(\"eventId\", event.id);",
+                  "    } catch(err) {",
+                  "        console.error(\"Failed to prepare test data\", err);",
+                  "    }",
+                  "};",
+                  "",
+                  "const interval = setInterval(() => {}, 1000);",
+                  "",
+                  "setTimeout(async () => {",
+                  "    try {",
+                  "        await main();",
+                  "    } catch (e) {",
+                  "        console.error(e);",
+                  "    } finally {",
+                  "        clearInterval(interval);",
+                  "    }",
+                  "}, 100);"
+                ],
+                "type": "text/javascript"
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 201\", function () {",
+                  "    pm.response.to.have.status(201);",
+                  "});",
+                  "",
+                  "pm.test(\"Response has correct structure\", function () {",
+                  "    const jsonData = pm.response.json();",
+                  "    pm.expect(jsonData).to.have.property('id');",
+                  "    pm.expect(jsonData).to.have.property('text');",
+                  "    pm.expect(jsonData).to.have.property('authorDto');",
+                  "    pm.expect(jsonData.authorDto).to.have.property('id');",
+                  "    pm.expect(jsonData.authorDto).to.have.property('name');",
+                  "    pm.expect(jsonData).to.have.property('eventDto');",
+                  "    pm.expect(jsonData.eventDto).to.have.property('id');",
+                  "    pm.expect(jsonData.eventDto).to.have.property('title');",
+                  "    pm.expect(jsonData).to.have.property('createdOn');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\"text\": \"Test comment\"}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/users/:userId/comments?eventId={{eventId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "users",
+                ":userId",
+                "comments"
+              ],
+              "query": [
+                {
+                  "key": "eventId",
+                  "value": "{{eventId}}"
+                }
+              ],
+              "variable": [
+                {
+                  "key": "userId",
+                  "value": "{{userId}}"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Update Comment",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "exec": [
+                  "const main = async () => {",
+                  "    const api = new API(pm);",
+                  "    const rnd = new RandomUtils();",
+                  "",
+                  "    try {",
+                  "        const organizer = await api.addUser(rnd.getUser());",
+                  "        const participant = await api.addUser(rnd.getUser());",
+                  "        pm.variables.set(\"userId\", participant.id);",
+                  "",
+                  "        const category = await api.addCategory(rnd.getCategory());",
+                  "        let event = await api.addEvent(organizer.id, {",
+                  "            ...rnd.getEvent(category.id),",
+                  "            eventDate: new Date(Date.now() + 24 * 3600 * 1000)",
+                  "                .toISOString()",
+                  "                .replace('T', ' ')",
+                  "                .replace(/\\.\\d+Z/, ''),",
+                  "            participantLimit: 10,",
+                  "            requestModeration: true",
+                  "        });",
+                  "",
+                  "        event = await api.publishEvent(event.id);",
+                  "",
+                  "        const request = await api.createRequest(participant.id, event.id);",
+                  "",
+                  "        await api.confirmRequests(organizer.id, event.id, {",
+                  "            requestIds: [request.id],",
+                  "            status: \"CONFIRMED\"",
+                  "        });",
+                  "",
+                  "       const comment = await api.addComment(participant.id, event.id, rnd.getComment());",
+                  "",
+                  "        pm.variables.set(\"eventId\", event.id);",
+                  "        pm.variables.set(\"commentId\", comment.id);",
+                  "    } catch(err) {",
+                  "        console.error(\"Failed to prepare test data\", err);",
+                  "    }",
+                  "};",
+                  "",
+                  "const interval = setInterval(() => {}, 1000);",
+                  "",
+                  "setTimeout(async () => {",
+                  "    try {",
+                  "        await main();",
+                  "    } catch (e) {",
+                  "        console.error(e);",
+                  "    } finally {",
+                  "        clearInterval(interval);",
+                  "    }",
+                  "}, 100);"
+                ],
+                "type": "text/javascript"
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 200\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test(\"Response has correct structure\", function () {",
+                  "    const jsonData = pm.response.json();",
+                  "    pm.expect(jsonData).to.have.property('id');",
+                  "    pm.expect(jsonData).to.have.property('text');",
+                  "    pm.expect(jsonData).to.have.property('authorDto');",
+                  "    pm.expect(jsonData.authorDto).to.have.property('id');",
+                  "    pm.expect(jsonData.authorDto).to.have.property('name');",
+                  "    pm.expect(jsonData).to.have.property('eventDto');",
+                  "    pm.expect(jsonData.eventDto).to.have.property('id');",
+                  "    pm.expect(jsonData.eventDto).to.have.property('title');",
+                  "    pm.expect(jsonData).to.have.property('updatedOn');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "PATCH",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\"text\": \"Updated comment text\"}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/users/:userId/comments/:commentId",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "users",
+                ":userId",
+                "comments",
+                ":commentId"
+              ],
+              "variable": [
+                {
+                  "key": "userId",
+                  "value": "{{userId}}"
+                },
+                {
+                  "key": "commentId",
+                  "value": "{{commentId}}"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Delete Comment",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "exec": [
+                  "const main = async () => {",
+                  "    const api = new API(pm);",
+                  "    const rnd = new RandomUtils();",
+                  "",
+                  "    try {",
+                  "        const user = await api.addUser(rnd.getUser());",
+                  "        const category = await api.addCategory(rnd.getCategory());",
+                  "        let event = await api.addEvent(user.id, rnd.getEvent(category.id));",
+                  "        event = await api.publishEvent(event.id);",
+                  "        const comment = await api.addComment(user.id, event.id, rnd.getComment());",
+                  "",
+                  "        pm.variables.set(\"userId\", user.id);",
+                  "        pm.variables.set(\"commentId\", comment.id);",
+                  "",
+                  "        const baseUrl = pm.variables.get(\"baseUrl\");",
+                  "        pm.request.url = `${baseUrl}/users/${user.id}/comments/${comment.id}`;",
+                  "    } catch(err) {",
+                  "        console.error(\"Failed to prepare test data\", err);",
+                  "    }",
+                  "};",
+                  "",
+                  "const interval = setInterval(() => {}, 1000);",
+                  "",
+                  "setTimeout(async () => {",
+                  "    try {",
+                  "        await main();",
+                  "    } catch (e) {",
+                  "        console.error(e);",
+                  "    } finally {",
+                  "        clearInterval(interval);",
+                  "    }",
+                  "}, 100);"
+                ],
+                "type": "text/javascript"
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 204\", function () {",
+                  "    pm.response.to.have.status(204);",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/users/:userId/comments/:commentId",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "users",
+                ":userId",
+                "comments",
+                ":commentId"
+              ],
+              "variable": [
+                {
+                  "key": "userId",
+                  "value": "{{userId}}"
+                },
+                {
+                  "key": "commentId",
+                  "value": "{{commentId}}"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Get User Comments",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "exec": [
+                  "const main = async () => {",
+                  "    const api = new API(pm);",
+                  "    const rnd = new RandomUtils();",
+                  "",
+                  "    try {",
+                  "        const organizer = await api.addUser(rnd.getUser());",
+                  "        const participant = await api.addUser(rnd.getUser());",
+                  "        pm.variables.set(\"userId\", participant.id);",
+                  "",
+                  "        const category = await api.addCategory(rnd.getCategory());",
+                  "        let event = await api.addEvent(organizer.id, {",
+                  "            ...rnd.getEvent(category.id),",
+                  "            eventDate: new Date(Date.now() + 24 * 3600 * 1000)",
+                  "                .toISOString()",
+                  "                .replace('T', ' ')",
+                  "                .replace(/\\.\\d+Z/, ''),",
+                  "            participantLimit: 10,",
+                  "            requestModeration: true",
+                  "        });",
+                  "",
+                  "        event = await api.publishEvent(event.id);",
+                  "",
+                  "        const request = await api.createRequest(participant.id, event.id);",
+                  "",
+                  "        await api.confirmRequests(organizer.id, event.id, {",
+                  "            requestIds: [request.id],",
+                  "            status: \"CONFIRMED\"",
+                  "        });",
+                  "",
+                  "       const comment = await api.addComment(participant.id, event.id, rnd.getComment());",
+                  "",
+                  "        const baseUrl = pm.variables.get(\"baseUrl\");",
+                  "        pm.request.url = `${baseUrl}/users/${user.id}/comments`;",
+                  "    } catch(err) {",
+                  "        console.error(\"Failed to prepare test data\", err);",
+                  "    }",
+                  "};",
+                  "",
+                  "const interval = setInterval(() => {}, 1000);",
+                  "",
+                  "setTimeout(async () => {",
+                  "    try {",
+                  "        await main();",
+                  "    } catch (e) {",
+                  "        console.error(e);",
+                  "    } finally {",
+                  "        clearInterval(interval);",
+                  "    }",
+                  "}, 100);"
+                ],
+                "type": "text/javascript"
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 200\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test(\"Response is an array\", function () {",
+                  "    pm.expect(pm.response.json()).to.be.an('array');",
+                  "});",
+                  "",
+                  "pm.test(\"First comment has correct structure\", function () {",
+                  "    const jsonData = pm.response.json()[0];",
+                  "    pm.expect(jsonData).to.have.property('id');",
+                  "    pm.expect(jsonData).to.have.property('text');",
+                  "    pm.expect(jsonData).to.have.property('eventDto');",
+                  "    pm.expect(jsonData.eventDto).to.have.property('id');",
+                  "    pm.expect(jsonData.eventDto).to.have.property('title');",
+                  "    pm.expect(jsonData).to.have.property('createdOn');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/users/:userId/comments",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "users",
+                ":userId",
+                "comments"
+              ],
+              "variable": [
+                {
+                  "key": "userId",
+                  "value": "{{userId}}"
+                }
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Admin Comments",
+      "item": [
+        {
+          "name": "Get Comment by ID by Admin",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "exec": [
+                  "const main = async () => {",
+                  "    const api = new API(pm);",
+                  "    const rnd = new RandomUtils();",
+                  "",
+                  "    try {",
+                  "        const organizer = await api.addUser(rnd.getUser());",
+                  "        const participant = await api.addUser(rnd.getUser());",
+                  "        pm.variables.set(\"userId\", participant.id);",
+                  "",
+                  "        const category = await api.addCategory(rnd.getCategory());",
+                  "        let event = await api.addEvent(organizer.id, {",
+                  "            ...rnd.getEvent(category.id),",
+                  "            eventDate: new Date(Date.now() + 24 * 3600 * 1000)",
+                  "                .toISOString()",
+                  "                .replace('T', ' ')",
+                  "                .replace(/\\.\\d+Z/, ''),",
+                  "            participantLimit: 10,",
+                  "            requestModeration: true",
+                  "        });",
+                  "",
+                  "        event = await api.publishEvent(event.id);",
+                  "",
+                  "        const request = await api.createRequest(participant.id, event.id);",
+                  "",
+                  "        await api.confirmRequests(organizer.id, event.id, {",
+                  "            requestIds: [request.id],",
+                  "            status: \"CONFIRMED\"",
+                  "        });",
+                  "",
+                  "       const comment = await api.addComment(participant.id, event.id, rnd.getComment());",
+                  "",
+                  "        const baseUrl = pm.variables.get(\"baseUrl\");",
+                  "        pm.request.url = `${baseUrl}/admin/comments/${comment.id}`;",
+                  "    } catch(err) {",
+                  "        console.error(\"Failed to prepare test data\", err);",
+                  "    }",
+                  "};",
+                  "",
+                  "const interval = setInterval(() => {}, 1000);",
+                  "",
+                  "setTimeout(async () => {",
+                  "    try {",
+                  "        await main();",
+                  "    } catch (e) {",
+                  "        console.error(e);",
+                  "    } finally {",
+                  "        clearInterval(interval);",
+                  "    }",
+                  "}, 100);"
+                ],
+                "type": "text/javascript"
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 200\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test(\"Response has correct structure\", function () {",
+                  "    const jsonData = pm.response.json();",
+                  "    pm.expect(jsonData).to.have.property('id');",
+                  "    pm.expect(jsonData).to.have.property('text');",
+                  "    pm.expect(jsonData).to.have.property('authorDto');",
+                  "    pm.expect(jsonData.authorDto).to.have.property('id');",
+                  "    pm.expect(jsonData.authorDto).to.have.property('name');",
+                  "    pm.expect(jsonData).to.have.property('eventDto');",
+                  "    pm.expect(jsonData.eventDto).to.have.property('id');",
+                  "    pm.expect(jsonData.eventDto).to.have.property('title');",
+                  "    pm.expect(jsonData).to.have.property('createdOn');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/admin/comments/:commentId",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "admin",
+                "comments",
+                ":commentId"
+              ],
+              "variable": [
+                {
+                  "key": "commentId",
+                  "value": "{{commentId}}"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Delete Comment by Admin",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "exec": [
+                  "const main = async () => {",
+                  "    const api = new API(pm);",
+                  "    const rnd = new RandomUtils();",
+                  "",
+                  "    try {",
+                  "        const user = await api.addUser(rnd.getUser());",
+                  "        const category = await api.addCategory(rnd.getCategory());",
+                  "        let event = await api.addEvent(user.id, rnd.getEvent(category.id));",
+                  "        event = await api.publishEvent(event.id);",
+                  "        const comment = await api.addComment(user.id, event.id, rnd.getComment());",
+                  "",
+                  "        pm.variables.set(\"commentId\", comment.id);",
+                  "",
+                  "        const baseUrl = pm.variables.get(\"baseUrl\");",
+                  "        pm.request.url = `${baseUrl}/admin/comments/${comment.id}`;",
+                  "    } catch(err) {",
+                  "        console.error(\"Failed to prepare test data\", err);",
+                  "    }",
+                  "};",
+                  "",
+                  "const interval = setInterval(() => {}, 1000);",
+                  "",
+                  "setTimeout(async () => {",
+                  "    try {",
+                  "        await main();",
+                  "    } catch (e) {",
+                  "        console.error(e);",
+                  "    } finally {",
+                  "        clearInterval(interval);",
+                  "    }",
+                  "}, 100);"
+                ],
+                "type": "text/javascript"
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 204\", function () {",
+                  "    pm.response.to.have.status(204);",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/admin/comments/:commentId",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "admin",
+                "comments",
+                ":commentId"
+              ],
+              "variable": [
+                {
+                  "key": "commentId",
+                  "value": "{{commentId}}"
+                }
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Public Comments",
+      "item": [
+        {
+          "name": "Get Comments by Event",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "exec": [
+                  "const main = async () => {",
+                  "    const api = new API(pm);",
+                  "    const rnd = new RandomUtils();",
+                  "",
+                  "    try {",
+                  "        const organizer = await api.addUser(rnd.getUser());",
+                  "        const participant = await api.addUser(rnd.getUser());",
+                  "        pm.variables.set(\"userId\", participant.id);",
+                  "",
+                  "        const category = await api.addCategory(rnd.getCategory());",
+                  "        let event = await api.addEvent(organizer.id, {",
+                  "            ...rnd.getEvent(category.id),",
+                  "            eventDate: new Date(Date.now() + 24 * 3600 * 1000)",
+                  "                .toISOString()",
+                  "                .replace('T', ' ')",
+                  "                .replace(/\\.\\d+Z/, ''),",
+                  "            participantLimit: 10,",
+                  "            requestModeration: true",
+                  "        });",
+                  "",
+                  "        event = await api.publishEvent(event.id);",
+                  "",
+                  "        const request = await api.createRequest(participant.id, event.id);",
+                  "",
+                  "        await api.confirmRequests(organizer.id, event.id, {",
+                  "            requestIds: [request.id],",
+                  "            status: \"CONFIRMED\"",
+                  "        });",
+                  "",
+                  "       const comment = await api.addComment(participant.id, event.id, rnd.getComment());",
+                  "",
+                  "        const baseUrl = pm.variables.get(\"baseUrl\");",
+                  "        pm.request.url = `${baseUrl}/events/${event.id}/comments`;",
+                  "    } catch(err) {",
+                  "        console.error(\"Failed to prepare test data\", err);",
+                  "    }",
+                  "};",
+                  "",
+                  "const interval = setInterval(() => {}, 1000);",
+                  "",
+                  "setTimeout(async () => {",
+                  "    try {",
+                  "        await main();",
+                  "    } catch (e) {",
+                  "        console.error(e);",
+                  "    } finally {",
+                  "        clearInterval(interval);",
+                  "    }",
+                  "}, 100);"
+                ],
+                "type": "text/javascript"
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 200\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test(\"Response is an array\", function () {",
+                  "    pm.expect(pm.response.json()).to.be.an('array');",
+                  "});",
+                  "",
+                  "pm.test(\"First comment has correct structure\", function () {",
+                  "    const jsonData = pm.response.json()[0];",
+                  "    pm.expect(jsonData).to.have.property('id');",
+                  "    pm.expect(jsonData).to.have.property('text');",
+                  "    pm.expect(jsonData).to.have.property('authorDto');",
+                  "    pm.expect(jsonData.authorDto).to.have.property('id');",
+                  "    pm.expect(jsonData.authorDto).to.have.property('name');",
+                  "    pm.expect(jsonData).to.have.property('eventDto');",
+                  "    pm.expect(jsonData.eventDto).to.have.property('id');",
+                  "    pm.expect(jsonData.eventDto).to.have.property('title');",
+                  "    pm.expect(jsonData).to.have.property('createdOn');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/events/:eventId/comments",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "events",
+                ":eventId",
+                "comments"
+              ],
+              "variable": [
+                {
+                  "key": "eventId",
+                  "value": "{{eventId}}"
+                }
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Negative Tests",
+      "item": [
+        {
+          "name": "Create Comment - Empty Text",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "exec": [
+                  "const main = async () => {",
+                  "    const api = new API(pm);",
+                  "    const rnd = new RandomUtils();",
+                  "",
+                  "    try {",
+                  "        const user = await api.addUser(rnd.getUser());",
+                  "        const category = await api.addCategory(rnd.getCategory());",
+                  "        let event = await api.addEvent(user.id, rnd.getEvent(category.id));",
+                  "        event = await api.publishEvent(event.id);",
+                  "",
+                  "        pm.variables.set(\"userId\", user.id);",
+                  "        pm.variables.set(\"eventId\", event.id);",
+                  "",
+                  "        const baseUrl = pm.variables.get(\"baseUrl\");",
+                  "        pm.request.url = `${baseUrl}/users/${user.id}/comments?eventId=${event.id}`;",
+                  "",
+                  "        pm.request.body.update({",
+                  "            mode: 'raw',",
+                  "            raw: JSON.stringify({ text: \"\" }),",
+                  "            options: { raw: { language: 'json' } }",
+                  "        });",
+                  "    } catch(err) {",
+                  "        console.error(\"Failed to prepare test data\", err);",
+                  "    }",
+                  "};",
+                  "",
+                  "const interval = setInterval(() => {}, 1000);",
+                  "",
+                  "setTimeout(async () => {",
+                  "    try {",
+                  "        await main();",
+                  "    } catch (e) {",
+                  "        console.error(e);",
+                  "    } finally {",
+                  "        clearInterval(interval);",
+                  "    }",
+                  "}, 100);"
+                ],
+                "type": "text/javascript"
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 400\", function () {",
+                  "    pm.response.to.have.status(400);",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\"text\": \"\"}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/users/:userId/comments?eventId={{eventId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "users",
+                ":userId",
+                "comments"
+              ],
+              "query": [
+                {
+                  "key": "eventId",
+                  "value": "{{eventId}}"
+                }
+              ],
+              "variable": [
+                {
+                  "key": "userId",
+                  "value": "{{userId}}"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Update Comment - Not Author",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "exec": [
+                  "const main = async () => {",
+                  "    const api = new API(pm);",
+                  "    const rnd = new RandomUtils();",
+                  "",
+                  "    try {",
+                  "        const organizer = await api.addUser(rnd.getUser());",
+                  "        const participant = await api.addUser(rnd.getUser());",
+                  "        const user2 = await api.addUser(rnd.getUser());",
+                  "        pm.variables.set(\"userId\", participant.id);",
+                  "",
+                  "        const category = await api.addCategory(rnd.getCategory());",
+                  "        let event = await api.addEvent(organizer.id, {",
+                  "            ...rnd.getEvent(category.id),",
+                  "            eventDate: new Date(Date.now() + 24 * 3600 * 1000)",
+                  "                .toISOString()",
+                  "                .replace('T', ' ')",
+                  "                .replace(/\\.\\d+Z/, ''),",
+                  "            participantLimit: 10,",
+                  "            requestModeration: true",
+                  "        });",
+                  "",
+                  "        event = await api.publishEvent(event.id);",
+                  "",
+                  "        const request = await api.createRequest(participant.id, event.id);",
+                  "",
+                  "        await api.confirmRequests(organizer.id, event.id, {",
+                  "            requestIds: [request.id],",
+                  "            status: \"CONFIRMED\"",
+                  "        });",
+                  "",
+                  "       const comment = await api.addComment(participant.id, event.id, rnd.getComment());",
+
+                  "        pm.variables.set(\"userId\", user2.id);",
+                  "        pm.variables.set(\"commentId\", comment.id);",
+                  "",
+                  "        const baseUrl = pm.variables.get(\"baseUrl\");",
+                  "        pm.request.url = `${baseUrl}/users/${user2.id}/comments/${comment.id}`;",
+                  "",
+                  "        pm.request.body.update({",
+                  "            mode: 'raw',",
+                  "            raw: JSON.stringify({ text: \"Updated text\" }),",
+                  "            options: { raw: { language: 'json' } }",
+                  "        });",
+                  "    } catch(err) {",
+                  "        console.error(\"Failed to prepare test data\", err);",
+                  "    }",
+                  "};",
+                  "",
+                  "const interval = setInterval(() => {}, 1000);",
+                  "",
+                  "setTimeout(async () => {",
+                  "    try {",
+                  "        await main();",
+                  "    } catch (e) {",
+                  "        console.error(e);",
+                  "    } finally {",
+                  "        clearInterval(interval);",
+                  "    }",
+                  "}, 100);"
+                ],
+                "type": "text/javascript"
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 403\", function () {",
+                  "    pm.response.to.have.status(403);",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "PATCH",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\"text\": \"Updated text\"}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/users/:userId/comments/:commentId",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "users",
+                ":userId",
+                "comments",
+                ":commentId"
+              ],
+              "variable": [
+                {
+                  "key": "userId",
+                  "value": "{{userId}}"
+                },
+                {
+                  "key": "commentId",
+                  "value": "{{commentId}}"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Get Non-Existent Comment by Admin",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "exec": [
+                  "const main = async () => {",
+                  "    const api = new API(pm);",
+                  "    const rnd = new RandomUtils();",
+                  "",
+                  "    try {",
+                  "        const baseUrl = pm.variables.get(\"baseUrl\");",
+                  "        pm.request.url = `${baseUrl}/admin/comments/999999`;",
+                  "    } catch(err) {",
+                  "        console.error(\"Failed to prepare test data\", err);",
+                  "    }",
+                  "};",
+                  "",
+                  "const interval = setInterval(() => {}, 1000);",
+                  "",
+                  "setTimeout(async () => {",
+                  "    try {",
+                  "        await main();",
+                  "    } catch (e) {",
+                  "        console.error(e);",
+                  "    } finally {",
+                  "        clearInterval(interval);",
+                  "    }",
+                  "}, 100);"
+                ],
+                "type": "text/javascript"
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 404\", function () {",
+                  "    pm.response.to.have.status(404);",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/admin/comments/999999",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "admin",
+                "comments",
+                "999999"
+              ]
+            }
+          }
+        }
+      ]
+    }
+  ],
+  "event": [
+    {
+      "listen": "prerequest",
+      "script": {
+        "type": "text/javascript",
+        "exec": [
+          "API = class {",
+          "    constructor(postman, verbose = false, baseUrl = \"http://localhost:8080\") {",
+          "        this.baseUrl = baseUrl;",
+          "        this.pm = postman;",
+          "        this._verbose = verbose;",
+          "    }",
+          "",
+          "    async addUser(user, verbose=null) {",
+          "        return this.post(\"/admin/users\", user, \"Error adding user: \", verbose);",
+          "    }",
+          "",
+          "    async addCategory(category, verbose=null) {",
+          "        return this.post(\"/admin/categories\", category, \"Error adding category: \", verbose);",
+          "    }",
+          "",
+          "    async addEvent(userId, event, verbose=null) {",
+          "        return this.post(`/users/${userId}/events`, event, \"Error adding event: \", verbose);",
+          "    }",
+          "",
+          "    async publishEvent(eventId, verbose=null) {",
+          "        return this.patch(`/admin/events/${eventId}`, {stateAction: \"PUBLISH_EVENT\"}, \"Error publishing event\", verbose);",
+          "    }",
+          "",
+          "    async addComment(userId, eventId, comment, verbose=null) {",
+          "        return this.post(`/users/${userId}/comments?eventId=${eventId}`, comment, \"Error adding comment: \", verbose);",
+          "    }",
+          "",
+          "    async createRequest(userId, eventId) {",
+          "        return this.post(`/users/${userId}/requests?eventId=${eventId}`, null, \"Error creating request\");",
+          "    }",
+          "",
+          "    async confirmRequests(userId, eventId, updateData) {",
+          "        return this.patch(`/users/${userId}/events/${eventId}/requests`, updateData, \"Error confirming requests\");",
+          "    }",
+          "",
+          "    async post(path, body, errorText = \"Error in POST request: \", verbose=null) {",
+          "        return this.sendRequest(\"POST\", path, body, errorText, verbose);",
+          "    }",
+          "",
+          "    async patch(path, body = null, errorText = \"Error in PATCH request: \", verbose=null) {",
+          "        return this.sendRequest(\"PATCH\", path, body, errorText, verbose);",
+          "    }",
+          "",
+          "    async sendRequest(method, path, body=null, errorText = \"Request error: \", verbose=null) {",
+          "        return new Promise((resolve, reject) => {",
+          "            verbose = verbose == null ? this._verbose : verbose;",
+          "            const request = {",
+          "                url: this.baseUrl + path,",
+          "                method: method,",
+          "                body: body == null ? \"\" : JSON.stringify(body),",
+          "                header: { \"Content-Type\": \"application/json\" },",
+          "            };",
+          "",
+          "            this.pm.sendRequest(request, (error, response) => {",
+          "                if(error || (response.code >= 400 && response.code <= 599)) {",
+          "                    let err = error ? error : JSON.stringify(response.json());",
+          "                    reject(new Error(errorText + err));",
+          "                }",
+          "                resolve(response.json());",
+          "            });",
+          "        });",
+          "    }",
+          "};",
+          "",
+          "RandomUtils = class {",
+          "    constructor() {}",
+          "",
+          "    getComment() {",
+          "        return {",
+          "            text: 'Test comment ' + Math.floor(Math.random() * 10000)",
+          "        };",
+          "    }",
+          "",
+          "    getUser() {",
+          "        return {",
+          "            name: pm.variables.replaceIn('{{$randomFullName}}'),",
+          "            email: pm.variables.replaceIn('{{$randomEmail}}')",
+          "        };",
+          "    }",
+          "",
+          "    getCategory() {",
+          "        return {",
+          "            name: pm.variables.replaceIn('{{$randomWord}}') + Math.floor(Math.random() * 10000)",
+          "        };",
+          "    }",
+          "",
+          "    getEvent(categoryId) {",
+          "        return {",
+          "            annotation: pm.variables.replaceIn('{{$randomLoremParagraph}}'),",
+          "            category: categoryId,",
+          "            description: pm.variables.replaceIn('{{$randomLoremParagraphs}}'),",
+          "            eventDate: this.getFutureDateTime(),",
+          "            location: {",
+          "                lat: parseFloat(pm.variables.replaceIn('{{$randomLatitude}}')),",
+          "                lon: parseFloat(pm.variables.replaceIn('{{$randomLongitude}}')),",
+          "            },",
+          "            paid: pm.variables.replaceIn('{{$randomBoolean}}'),",
+          "            participantLimit: 10,",
+          "            requestModeration: true,",
+          "            title: pm.variables.replaceIn('{{$randomLoremSentence}}'),",
+          "        };",
+          "    }",
+          "",
+          "    getFutureDateTime(hourShift = 5, minuteShift=0, yearShift=0) {",
+          "        let moment = require('moment');",
+          "        let m = moment();",
+          "        m.add(hourShift, 'hour');",
+          "        m.add(minuteShift, 'minute');",
+          "        m.add(yearShift, 'year');",
+          "        return m.format('YYYY-MM-DD HH:mm:ss');",
+          "    }",
+          "};"
+        ]
+      }
+    }
+  ],
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:8080",
+      "type": "string"
+    },
+    {
+      "key": "userId",
+      "value": ""
+    },
+    {
+      "key": "eventId",
+      "value": ""
+    },
+    {
+      "key": "commentId",
+      "value": ""
+    }
+  ]
+}
