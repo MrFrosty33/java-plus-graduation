@@ -17,7 +17,7 @@ import java.time.LocalDateTime;
 @Slf4j
 public class StatSaver {
     private final StatClient statClient;
-    @Value("${app}")
+    @Value("${spring.application.name}")
     private String app;
 
     public void save(HttpServletRequest request, String controllerName) {
