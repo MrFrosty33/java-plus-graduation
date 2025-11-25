@@ -33,10 +33,10 @@ services:
       timeout: 3s
       retries: 5
 
-  gateway-server:
+  gateway:
     build:
       context: .
-      dockerfile: infra/gateway-server/Dockerfile
+      dockerfile: infra/gateway/Dockerfile
     environment:
       EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://discovery-server:8761/eureka/
     healthcheck:
