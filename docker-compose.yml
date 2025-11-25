@@ -1,7 +1,54 @@
 version: '3.8'
 
 services:
-  # БД для stat сервиса
+  discovery-server:
+    build:
+      context: .
+      dockerfile: infra/discovery-server/Dockerfile
+    environment:
+      SPRING_PROFILES_ACTIVE: docker
+    ports:
+      - "8761:8761"
+    healthcheck:
+      test: [ "CMD", "curl", "-f", "http://localhost:8761/actuator/health" ]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+
+  config-server:
+    build:
+      context: .
+      dockerfile: infra/config-server/Dockerfile
+    environment:
+      SPRING_PROFILES_ACTIVE: native,docker
+    depends_on:
+      discovery-server:
+        condition: service_healthy
+    healthcheck:
+      test: [ "CMD", "curl", "-f", "http://localhost:8888/actuator/health" ]
+      # 15 секунд, иначе не факт, что config-server кэшируется в eureka
+      # зависит от eureka.client.registryFetchIntervalSeconds: X
+      # в config-server/resources/config/infra/discovery-server/discovery-server-default.yml
+      interval: 15s
+      timeout: 3s
+      retries: 5
+
+  gateway-server:
+    build:
+      context: .
+      dockerfile: infra/gateway-server/Dockerfile
+    environment:
+      EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://discovery-server:8761/eureka/
+    healthcheck:
+      test: [ "CMD", "curl", "-f", "http://localhost:8080/actuator/health" ]
+      interval: 15s
+      timeout: 3s
+      retries: 5
+    depends_on:
+      config-server:
+        condition: service_healthy
+
+  # БД для stats сервиса
   stats-db:
     image: postgres:16.1
     environment:
@@ -11,18 +58,21 @@ services:
     ports:
       - "6542:5432"
 
-  # stat сервис
+  # stats сервис
   stats-server:
     build:
       context: .
-      dockerfile: stat/Dockerfile
-    depends_on: [stats-db]
+      dockerfile: stats/Dockerfile
     environment:
+      SPRING_PROFILES_ACTIVE: docker
+      EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://discovery-server:8761/eureka/
       SPRING_DATASOURCE_URL: jdbc:postgresql://stats-db:5432/ewm_stats
       SPRING_DATASOURCE_USERNAME: stats
       SPRING_DATASOURCE_PASSWORD: stats
-    ports:
-      - "9090:9090"
+    depends_on:
+      config-server:
+        condition: service_healthy
+
 
   # БД для main сервиса
   ewm-db:
@@ -38,12 +88,12 @@ services:
   ewm-service:
     build:
       context: .
-      dockerfile: main-service/Dockerfile
-    depends_on: [ewm-db, stats-server]
+      dockerfile: core/main-service/Dockerfile
     environment:
+      EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://discovery-server:8761/eureka/
       SPRING_DATASOURCE_URL: jdbc:postgresql://ewm-db:5432/ewm
       SPRING_DATASOURCE_USERNAME: main
       SPRING_DATASOURCE_PASSWORD: main
-      STAT_SVC_URL: http://stats-server:9090
-    ports:
-      - "8080:8080"
+    depends_on:
+      config-server:
+        condition: service_healthy

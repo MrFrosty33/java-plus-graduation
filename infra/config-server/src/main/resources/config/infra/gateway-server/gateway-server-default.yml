@@ -1,0 +1,30 @@
+spring:
+  cloud:
+    gateway:
+      discovery:
+        locator:
+          enabled: false
+          lower-case-service-id: true
+      routes:
+        - id: main_service_route
+          uri: lb://main-service
+          predicates:
+            - Path=/**
+#надо разбираться, тесты отваливаются и не доходят
+
+
+server:
+  port: 8080
+
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health, info, gateway
+
+logging:
+  level:
+    org.springframework.cloud.gateway: DEBUG
+    reactor.netty.http.server: DEBUG
+
