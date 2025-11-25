@@ -1,0 +1,22 @@
+spring:
+  sql:
+    init:
+      mode: always
+  datasource:
+    driver-class-name: org.postgresql.Driver
+    url: jdbc:postgresql://localhost:6542/ewm_stats
+    username: stats
+    password: stats
+
+logging:
+  level:
+    ru.yandex.practicum: TRACE
+
+stats:
+  service-id: stats-server
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health, info, mappings, httptrace
