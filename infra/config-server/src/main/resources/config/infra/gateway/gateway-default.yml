@@ -9,6 +9,7 @@ spring:
           uri: lb://main-service
           predicates:
             - Path=/**
+#надо разбираться, тесты отваливаются и не доходят
 
 
 server:

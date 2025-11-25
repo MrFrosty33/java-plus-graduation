@@ -3,7 +3,7 @@ server:
 
 spring:
   application:
-    name: stats-service
+    name: stats-server
   config:
     import: "configserver:"
   cloud:
