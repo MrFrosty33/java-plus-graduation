@@ -3,7 +3,8 @@ spring:
     gateway:
       discovery:
         locator:
-          enabled: true
+          enabled: false
+          lower-case-service-id: true
       routes:
         - id: main_service_route
           uri: lb://main-service
@@ -21,3 +22,9 @@ management:
     web:
       exposure:
         include: health, info, gateway
+
+logging:
+  level:
+    org.springframework.cloud.gateway: DEBUG
+    reactor.netty.http.server: DEBUG
+
