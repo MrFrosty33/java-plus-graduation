@@ -16,6 +16,9 @@ spring:
         useRandomPolicy: true
         max-interval: 6000
 
+stats:
+  service-id: stats-server
+
 eureka:
   client:
     serviceUrl:

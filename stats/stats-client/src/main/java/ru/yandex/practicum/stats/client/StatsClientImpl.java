@@ -11,6 +11,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.retry.backoff.FixedBackOffPolicy;
 import org.springframework.retry.policy.MaxAttemptsRetryPolicy;
 import org.springframework.retry.support.RetryTemplate;
+import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestClient;
 import org.springframework.web.util.UriComponentsBuilder;
 import ru.yandex.practicum.stats.dto.EndpointHitCreate;
@@ -21,16 +22,17 @@ import java.time.LocalDateTime;
 import java.util.List;
 
 @Slf4j
+@Component
 public class StatsClientImpl implements StatsClient {
     private final RestClient client;
     private final DiscoveryClient discoveryClient;
     private final RetryTemplate retryTemplate;
+    private final String statsServiceId;
 
-    @Value("${stats.service-id}")
-    private String statsServiceId;
-
-    public StatsClientImpl(@Autowired DiscoveryClient discoveryClient) {
+    public StatsClientImpl(@Autowired DiscoveryClient discoveryClient,
+                           @Value("${stats.service-id}") String statsServiceId) {
         this.discoveryClient = discoveryClient;
+        this.statsServiceId = statsServiceId;
         this.client = RestClient.builder()
                 .build();
         this.retryTemplate = new RetryTemplate();

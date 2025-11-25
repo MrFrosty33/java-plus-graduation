@@ -12,9 +12,6 @@ logging:
   level:
     ru.yandex.practicum: TRACE
 
-stats:
-  service-id: stats-server
-
 management:
   endpoints:
     web:
