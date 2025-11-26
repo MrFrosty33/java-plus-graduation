@@ -10,12 +10,15 @@ spring:
           uri: lb://main-service
           predicates:
             - Path=/**
-#надо разбираться, тесты отваливаются и не доходят
 
+        - id: user_service_route
+          uri: lb://user-service
+          predicates:
+            - Path=/admin/users/**
+            - CircuitBreaker-userServiceCircuitBreaker
 
 server:
   port: 8080
-
 
 management:
   endpoints:
