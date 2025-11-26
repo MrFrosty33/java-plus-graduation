@@ -25,6 +25,7 @@ import ru.yandex.practicum.interaction.api.model.user.UserDto;
 import ru.yandex.practicum.user.service.UserService;
 
 import java.util.List;
+import java.util.Optional;
 
 @RestController
 @RequestMapping("/admin/users")
@@ -53,6 +54,14 @@ public class UserAdminController implements UserFeignClient {
                 .size(size)
                 .build();
         return service.find(param);
+    }
+
+    @GetMapping
+    public Optional<UserDto> findById(@RequestParam
+                                      @Positive(message = "must be positive")
+                                      Long id) {
+        log.trace("{}: findById() call with id: {}", controllerName, id);
+        return service.findById(id);
     }
 
     @PostMapping

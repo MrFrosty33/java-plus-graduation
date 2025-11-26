@@ -70,11 +70,11 @@ public class ParticipationRequestServiceImpl implements ParticipationRequestServ
 
         Event event = eventRepository.findById(eventId).get();
 
-        if (event.getInitiator().getId().equals(requesterId)) {
+        if (event.getInitiatorId().getId().equals(requesterId)) {
             log.info("{}: attempt to create participationRequest by an event initiator with requesterId: {}, eventId: {}, " +
-                    "initiatorId: {}", className, requesterId, eventId, event.getInitiator().getId());
+                    "initiatorId: {}", className, requesterId, eventId, event.getInitiatorId().getId());
             throw new ConflictException("Initiator can't create participation request.", "requesterId: "
-                    + requesterId + " equals to initiatorId: " + event.getInitiator().getId());
+                    + requesterId + " equals to initiatorId: " + event.getInitiatorId().getId());
         }
 
         if (event.getPublishedOn() == null) {

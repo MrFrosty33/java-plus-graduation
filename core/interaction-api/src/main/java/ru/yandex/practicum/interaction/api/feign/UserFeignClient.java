@@ -10,6 +10,7 @@ import ru.yandex.practicum.interaction.api.feign.fallback.UserFallback;
 import ru.yandex.practicum.interaction.api.model.user.UserDto;
 
 import java.util.List;
+import java.util.Optional;
 
 @FeignClient(name = "user-service", fallback = UserFallback.class)
 public interface UserFeignClient {
@@ -23,4 +24,7 @@ public interface UserFeignClient {
                        @Positive(message = "must be positive")
                        int size,
                        HttpServletRequest request);
+
+    @GetMapping
+    Optional<UserDto> findById(@RequestParam @Positive Long id);
 }

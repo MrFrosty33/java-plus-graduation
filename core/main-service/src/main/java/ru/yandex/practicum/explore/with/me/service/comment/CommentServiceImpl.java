@@ -14,15 +14,15 @@ import ru.yandex.practicum.explore.with.me.model.comment.CommentUserDto;
 import ru.yandex.practicum.explore.with.me.model.comment.CreateUpdateCommentDto;
 import ru.yandex.practicum.explore.with.me.model.event.Event;
 import ru.yandex.practicum.explore.with.me.model.participation.ParticipationRequestStatus;
-import ru.yandex.practicum.explore.with.me.model.user.User;
 import ru.yandex.practicum.explore.with.me.repository.CommentRepository;
 import ru.yandex.practicum.explore.with.me.repository.EventRepository;
 import ru.yandex.practicum.explore.with.me.repository.ParticipationRequestRepository;
-import ru.yandex.practicum.explore.with.me.repository.UserRepository;
 import ru.yandex.practicum.interaction.api.exception.BadRequestException;
 import ru.yandex.practicum.interaction.api.exception.ConflictException;
 import ru.yandex.practicum.interaction.api.exception.ForbiddenException;
 import ru.yandex.practicum.interaction.api.exception.NotFoundException;
+import ru.yandex.practicum.interaction.api.feign.UserFeignClient;
+import ru.yandex.practicum.interaction.api.model.user.UserDto;
 import ru.yandex.practicum.interaction.api.util.ExistenceValidator;
 
 import java.time.LocalDateTime;
@@ -39,10 +39,11 @@ public class CommentServiceImpl implements CommentService, ExistenceValidator<Co
     private final String className = this.getClass().getSimpleName();
 
     private final CommentRepository commentRepository;
-    private final UserRepository userRepository;
+
+    //todo меняем на Feign
+    private final UserFeignClient userFeignClient;
     private final EventRepository eventRepository;
     private final ParticipationRequestRepository requestRepository;
-    private final ExistenceValidator<User> userExistenceValidator;
     private final ExistenceValidator<Event> eventExistenceValidator;
     private final CommentMapper mapper;
 
@@ -70,7 +71,7 @@ public class CommentServiceImpl implements CommentService, ExistenceValidator<Co
     public CommentDto createComment(Long userId, Long eventId, CreateUpdateCommentDto dto) {
         validateText(dto.getText(), 100);
 
-        User author = userRepository.findById(userId)
+        UserDto author = userFeignClient.findById(userId)
                 .orElseThrow(() -> {
                     log.info("{}: attempt to find user with id: {}", className, userId);
                             return new NotFoundException(
@@ -105,7 +106,7 @@ public class CommentServiceImpl implements CommentService, ExistenceValidator<Co
         }
 
         Comment comment = mapper.toModel(dto);
-        comment.setAuthor(author);
+        comment.setAuthorId(author.getId());
         comment.setEvent(event);
 
         CommentDto result = mapper.toDto(commentRepository.save(comment));
@@ -115,11 +116,11 @@ public class CommentServiceImpl implements CommentService, ExistenceValidator<Co
 
     @Override
     public CommentUpdateDto updateComment(Long userId, Long commentId, CreateUpdateCommentDto dto) {
-        userExistenceValidator.validateExists(userId);
+        validateUserExists(userId);
         validateText(dto.getText(), 1000);
 
         Comment comment = getOrThrow(commentId);
-        if (!comment.getAuthor().getId().equals(userId)) {
+        if (!comment.getAuthorId().equals(userId)) {
             log.info("{}: attempt to redact comment with id: {} by a user with id: {}, " +
                     "which is not an author", className, commentId, userId);
             throw new ForbiddenException(CONDITIONS_NOT_MET,
@@ -135,10 +136,10 @@ public class CommentServiceImpl implements CommentService, ExistenceValidator<Co
 
     @Override
     public void deleteCommentByAuthor(Long userId, Long commentId) {
-        userExistenceValidator.validateExists(userId);
+        validateUserExists(userId);
         Comment comment = getOrThrow(commentId);
 
-        if (!comment.getAuthor().getId().equals(userId)) {
+        if (!comment.getAuthorId().equals(userId)) {
             log.info("{}: attempt to delete comment, but user with id: {} " +
                     "is not an author", className, userId);
             throw new ForbiddenException(CONDITIONS_NOT_MET,
@@ -152,7 +153,7 @@ public class CommentServiceImpl implements CommentService, ExistenceValidator<Co
     @Override
     @Transactional(readOnly = true)
     public List<CommentUserDto> getCommentsByAuthor(Long userId, Pageable pageable) {
-        userExistenceValidator.validateExists(userId);
+        validateUserExists(userId);
         List<CommentUserDto> result = commentRepository.findByAuthorIdOrderByCreatedOnDesc(userId, pageable)
                 .stream()
                 .map(mapper::toUserDto)
@@ -202,5 +203,16 @@ public class CommentServiceImpl implements CommentService, ExistenceValidator<Co
             throw new NotFoundException(OBJECT_NOT_FOUND,
                     "Comment with id=" + id + " was not found");
         }
+    }
+
+    private void validateUserExists(Long userId) {
+        userFeignClient.findById(userId)
+                .orElseThrow(() -> {
+                            log.info("{}: attempt to find user with id: {}", className, userId);
+                            return new NotFoundException(
+                                    OBJECT_NOT_FOUND,
+                                    String.format("User with id: %d was not found", userId));
+                        }
+                );
     }
 }

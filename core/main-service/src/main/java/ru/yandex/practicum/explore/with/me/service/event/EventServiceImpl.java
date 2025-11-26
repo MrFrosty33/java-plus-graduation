@@ -73,7 +73,7 @@ public class EventServiceImpl implements ExistenceValidator<Event>, EventService
         Category category = findCategoryByIdOrElseThrow(categoryId);
 
         Event event = eventMapper.toModel(eventDto);
-        event.setInitiator(user);
+        event.setInitiatorId(user);
         event.setCategory(category);
         event.setState(EventState.PENDING);
         Event eventSaved = eventRepository.save(event);
@@ -342,7 +342,7 @@ public class EventServiceImpl implements ExistenceValidator<Event>, EventService
         Event event = eventRepository.findById(eventId).orElseThrow(() ->
                 new NotFoundException("The required object was not found.", "Event with id=" + eventId + " was not found"));
 
-        if (event.getInitiator().getId() != userId) {
+        if (event.getInitiatorId().getId() != userId) {
             log.info("User {} cannot manipulate with the event with id {}", userId, eventId);
             throw new ConflictException("For the requested operation the conditions are not met.",
                     "Only initiator of event can can manipulate with it");

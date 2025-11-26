@@ -21,7 +21,6 @@ import lombok.Setter;
 import ru.yandex.practicum.explore.with.me.model.category.Category;
 import ru.yandex.practicum.explore.with.me.model.comment.Comment;
 import ru.yandex.practicum.explore.with.me.model.participation.ParticipationRequest;
-import ru.yandex.practicum.explore.with.me.model.user.User;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -71,10 +70,8 @@ public class Event {
     @Column(name = "title", length = 120)
     private String title;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "initiator_id")
-    private User initiator;
-    //todo переделать на long
+    @Column(name = "initiator_id")
+    private Long initiatorId;
 
     @Convert(converter = EventStateConverter.class)
     private EventState state;

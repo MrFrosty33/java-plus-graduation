@@ -7,7 +7,6 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import ru.yandex.practicum.interaction.api.exception.ConflictException;
-import ru.yandex.practicum.interaction.api.exception.NotFoundException;
 import ru.yandex.practicum.interaction.api.mapper.UserMapper;
 import ru.yandex.practicum.interaction.api.model.user.AdminUserFindParam;
 import ru.yandex.practicum.interaction.api.model.user.NewUserRequest;
@@ -15,15 +14,15 @@ import ru.yandex.practicum.interaction.api.model.user.User;
 import ru.yandex.practicum.interaction.api.model.user.UserDto;
 import ru.yandex.practicum.interaction.api.model.user.UserShortDto;
 import ru.yandex.practicum.interaction.api.util.DataProvider;
-import ru.yandex.practicum.interaction.api.util.ExistenceValidator;
 import ru.yandex.practicum.user.repository.UserRepository;
 
 import java.util.List;
+import java.util.Optional;
 
 @Service
 @Slf4j
 @RequiredArgsConstructor(onConstructor_ = @Autowired)
-public class UserServiceImpl implements UserService, ExistenceValidator<User>, DataProvider<UserShortDto, User> {
+public class UserServiceImpl implements UserService, DataProvider<UserShortDto, User> {
     private final String className = this.getClass().getSimpleName();
     private final UserRepository userRepository;
     private final UserMapper userMapper;
@@ -44,6 +43,19 @@ public class UserServiceImpl implements UserService, ExistenceValidator<User>, D
         }
 
         log.info("{}: result of find(): {}", className, result);
+        return result;
+    }
+
+    @Override
+    public Optional<UserDto> findById(Long id) {
+        Optional<User> user = userRepository.findById(id);
+        Optional<UserDto> result = Optional.empty();
+
+        if (user.isPresent()) {
+            result = Optional.of(userMapper.toDto(user.get()));
+        }
+
+        log.info("{}: result of findById: {}", className, result);
         return result;
     }
 
@@ -74,15 +86,6 @@ public class UserServiceImpl implements UserService, ExistenceValidator<User>, D
     @Override
     public UserShortDto getDto(User entity) {
         return userMapper.toShortDto(entity);
-    }
-
-    @Override
-    public void validateExists(Long id) {
-        if (userRepository.findById(id).isEmpty()) {
-            log.info("{}: attempt to find user with id: {}", className, id);
-            throw new NotFoundException("The required object was not found.",
-                    "User with id=" + id + " was not found");
-        }
     }
 
     private void validateEmailUnique(String email) {
