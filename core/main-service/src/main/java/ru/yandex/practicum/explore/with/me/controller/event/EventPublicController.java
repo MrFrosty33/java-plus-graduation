@@ -23,7 +23,7 @@ import ru.yandex.practicum.explore.with.me.model.event.dto.EventFullDto;
 import ru.yandex.practicum.explore.with.me.model.event.dto.EventShortDto;
 import ru.yandex.practicum.explore.with.me.service.comment.CommentService;
 import ru.yandex.practicum.explore.with.me.service.event.EventService;
-import ru.yandex.practicum.explore.with.me.util.StatsSaver;
+import ru.yandex.practicum.explore.with.me.stats.StatsSaver;
 
 import java.time.LocalDateTime;
 import java.util.List;

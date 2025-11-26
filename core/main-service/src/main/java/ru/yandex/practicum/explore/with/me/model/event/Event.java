@@ -74,6 +74,7 @@ public class Event {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "initiator_id")
     private User initiator;
+    //todo переделать на long
 
     @Convert(converter = EventStateConverter.class)
     private EventState state;

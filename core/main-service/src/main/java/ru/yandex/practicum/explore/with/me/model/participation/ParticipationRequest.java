@@ -41,6 +41,7 @@ public class ParticipationRequest {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "requester_id")
     private User requester;
+    //todo переделать на long
 
     @Convert(converter = ParticipationRequestStatusConverter.class)
     private ParticipationRequestStatus status;

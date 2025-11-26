@@ -10,6 +10,13 @@ import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
+import ru.yandex.practicum.interaction.api.exception.ApiError;
+import ru.yandex.practicum.interaction.api.exception.BadRequestException;
+import ru.yandex.practicum.interaction.api.exception.ConflictException;
+import ru.yandex.practicum.interaction.api.exception.CustomException;
+import ru.yandex.practicum.interaction.api.exception.ForbiddenException;
+import ru.yandex.practicum.interaction.api.exception.InternalServerException;
+import ru.yandex.practicum.interaction.api.exception.NotFoundException;
 
 import java.time.LocalDateTime;
 

@@ -7,6 +7,7 @@ import ru.yandex.practicum.explore.with.me.model.comment.CommentDto;
 import ru.yandex.practicum.explore.with.me.model.comment.CommentUpdateDto;
 import ru.yandex.practicum.explore.with.me.model.comment.CommentUserDto;
 import ru.yandex.practicum.explore.with.me.model.comment.CreateUpdateCommentDto;
+import ru.yandex.practicum.interaction.api.mapper.UserMapper;
 
 @Mapper(componentModel = "spring", uses = {UserMapper.class, EventMapper.class})
 public interface CommentMapper {

@@ -5,7 +5,7 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import ru.yandex.practicum.explore.with.me.model.category.CategoryDto;
-import ru.yandex.practicum.explore.with.me.model.user.UserShortDto;
+import ru.yandex.practicum.interaction.api.model.user.UserShortDto;
 
 import java.time.LocalDateTime;
 

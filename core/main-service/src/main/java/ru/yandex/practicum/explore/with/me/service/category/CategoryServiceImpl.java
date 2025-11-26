@@ -7,15 +7,15 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import ru.yandex.practicum.explore.with.me.exception.ConflictException;
-import ru.yandex.practicum.explore.with.me.exception.NotFoundException;
 import ru.yandex.practicum.explore.with.me.mapper.CategoryMapper;
 import ru.yandex.practicum.explore.with.me.model.category.Category;
 import ru.yandex.practicum.explore.with.me.model.category.CategoryDto;
 import ru.yandex.practicum.explore.with.me.model.category.NewCategoryDto;
 import ru.yandex.practicum.explore.with.me.repository.CategoryRepository;
-import ru.yandex.practicum.explore.with.me.util.DataProvider;
-import ru.yandex.practicum.explore.with.me.util.ExistenceValidator;
+import ru.yandex.practicum.interaction.api.exception.ConflictException;
+import ru.yandex.practicum.interaction.api.exception.NotFoundException;
+import ru.yandex.practicum.interaction.api.util.DataProvider;
+import ru.yandex.practicum.interaction.api.util.ExistenceValidator;
 
 import java.util.List;
 

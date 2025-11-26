@@ -11,6 +11,7 @@ import ru.yandex.practicum.explore.with.me.model.event.dto.EventFullDto;
 import ru.yandex.practicum.explore.with.me.model.event.dto.EventShortDto;
 import ru.yandex.practicum.explore.with.me.model.event.dto.NewEventDto;
 import ru.yandex.practicum.explore.with.me.model.event.dto.UpdateEventAdminRequestDto;
+import ru.yandex.practicum.interaction.api.mapper.UserMapper;
 
 @Mapper(componentModel = "spring", uses = {UserMapper.class, CategoryMapper.class, CommentMapper.class})
 public interface EventMapper {

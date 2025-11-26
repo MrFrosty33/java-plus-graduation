@@ -84,6 +84,18 @@ services:
     ports:
       - "6543:5432"
 
+  # БД для main сервиса
+  microservices-db:
+    image: postgres:16.1
+    environment:
+      POSTGRES_DB: postgres
+      POSTGRES_USER: frosty
+      POSTGRES_PASSWORD: ytsorf
+    ports:
+      - "6767:6766"
+    volumes:
+      - ./db:/docker-entrypoint-initdb.d
+
   # main сервис
   ewm-service:
     build:
