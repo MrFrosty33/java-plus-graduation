@@ -6,16 +6,17 @@ spring:
           enabled: false
           lower-case-service-id: true
       routes:
-        - id: main_service_route
-          uri: lb://main-service
-          predicates:
-            - Path=/**
-
         - id: user_service_route
           uri: lb://user-service
           predicates:
             - Path=/admin/users/**
-            - CircuitBreaker-userServiceCircuitBreaker
+          filters:
+            - CircuitBreaker=userServiceCircuitBreaker
+
+        - id: main_service_route
+          uri: lb://main-service
+          predicates:
+            - Path=/**
 
 server:
   port: 8080
