@@ -128,7 +128,7 @@ public class CommentServiceImpl implements CommentService, ExistenceValidator<Co
 
         comment.setText(dto.getText());
         comment.setUpdatedOn(LocalDateTime.now());
-        CommentUpdateDto result = mapper.toUpdateDto(comment);
+        CommentUpdateDto result = mapToCommentUpdateDto(comment);
         log.info("{}: result of updateComment(): {}", className, result);
         return result;
     }
@@ -206,6 +206,22 @@ public class CommentServiceImpl implements CommentService, ExistenceValidator<Co
         );
 
         CommentDto.CommentAuthorDto authorDto = new CommentDto.CommentAuthorDto(userDto.getId(), userDto.getName());
+        result.setAuthorDto(authorDto);
+
+        return result;
+    }
+
+    private CommentUpdateDto mapToCommentUpdateDto(Comment comment) {
+        CommentUpdateDto result = mapper.toUpdateDto(comment);
+        UserDto userDto = userFeignClient.findById(comment.getAuthorId()).orElseThrow(() -> {
+                    log.info("{}: user with id: {} was not found", className, comment.getAuthorId());
+                    return new NotFoundException(
+                            OBJECT_NOT_FOUND,
+                            String.format("User with id: %d was not found", comment.getAuthorId()));
+                }
+        );
+
+        CommentUpdateDto.CommentAuthorDto authorDto = new CommentUpdateDto.CommentAuthorDto(userDto.getId(), userDto.getName());
         result.setAuthorDto(authorDto);
 
         return result;

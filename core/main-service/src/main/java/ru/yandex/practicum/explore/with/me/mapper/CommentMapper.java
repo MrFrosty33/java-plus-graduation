@@ -19,13 +19,13 @@ public interface CommentMapper {
     @Mapping(target = "createdOn", expression = "java(java.time.LocalDateTime.now())")
     @Mapping(target = "updatedOn", ignore = true)
     @Mapping(target = "event", ignore = true)
-    @Mapping(target = "author", ignore = true)
+    @Mapping(target = "authorId", ignore = true)
     Comment toModel(CreateUpdateCommentDto createUpdateCommentDto);
 
     @Mapping(target = "eventDto", source = "event")
     CommentUserDto toUserDto(Comment comment);
 
     @Mapping(target = "eventDto", source = "event")
-    @Mapping(target = "authorDto", source = "author")
+    @Mapping(target = "authorDto", ignore = true)
     CommentUpdateDto toUpdateDto(Comment comment);
 }
