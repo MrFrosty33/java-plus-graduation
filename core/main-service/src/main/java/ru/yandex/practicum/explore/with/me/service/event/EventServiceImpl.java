@@ -29,15 +29,15 @@ import ru.yandex.practicum.explore.with.me.model.event.dto.UpdateEventUserReques
 import ru.yandex.practicum.explore.with.me.model.participation.ParticipationRequest;
 import ru.yandex.practicum.explore.with.me.model.participation.ParticipationRequestDto;
 import ru.yandex.practicum.explore.with.me.model.participation.ParticipationRequestStatus;
-import ru.yandex.practicum.explore.with.me.model.user.User;
 import ru.yandex.practicum.explore.with.me.repository.CategoryRepository;
 import ru.yandex.practicum.explore.with.me.repository.EventRepository;
 import ru.yandex.practicum.explore.with.me.repository.ParticipationRequestRepository;
-import ru.yandex.practicum.explore.with.me.repository.UserRepository;
 import ru.yandex.practicum.explore.with.me.stats.StatsGetter;
 import ru.yandex.practicum.interaction.api.exception.BadRequestException;
 import ru.yandex.practicum.interaction.api.exception.ConflictException;
 import ru.yandex.practicum.interaction.api.exception.NotFoundException;
+import ru.yandex.practicum.interaction.api.feign.UserFeignClient;
+import ru.yandex.practicum.interaction.api.model.user.UserDto;
 import ru.yandex.practicum.interaction.api.util.ExistenceValidator;
 import ru.yandex.practicum.stats.dto.ViewStats;
 
@@ -57,7 +57,7 @@ public class EventServiceImpl implements ExistenceValidator<Event>, EventService
     private final String className = this.getClass().getSimpleName();
 
     private final EventRepository eventRepository;
-    private final UserRepository userRepository;
+    private final UserFeignClient userFeignClient;
     private final CategoryRepository categoryRepository;
     private final EventMapper eventMapper;
     private final StatsGetter statsGetter;
@@ -67,13 +67,13 @@ public class EventServiceImpl implements ExistenceValidator<Event>, EventService
     @Transactional
     @Override
     public EventFullDto createEvent(long userId, NewEventDto eventDto) {
-        User user = findUserByIdOrElseThrow(userId);
+        UserDto user = findUserByIdOrElseThrow(userId);
 
         long categoryId = eventDto.getCategory();
         Category category = findCategoryByIdOrElseThrow(categoryId);
 
         Event event = eventMapper.toModel(eventDto);
-        event.setInitiatorId(user);
+        event.setInitiatorId(user.getId());
         event.setCategory(category);
         event.setState(EventState.PENDING);
         Event eventSaved = eventRepository.save(event);
@@ -159,9 +159,9 @@ public class EventServiceImpl implements ExistenceValidator<Event>, EventService
     @Override
     @Transactional(readOnly = true)
     public List<EventShortDto> getEventsByUser(long userId, int from, int count) {
-        User user = findUserByIdOrElseThrow(userId);
+        UserDto user = findUserByIdOrElseThrow(userId);
         Pageable pageable = PageRequest.of(from, count, Sort.by("createdOn").ascending());
-        List<Event> events = eventRepository.findEventsByUser(user, pageable).getContent();
+        List<Event> events = eventRepository.findEventsByUser(user.getId(), pageable).getContent();
         if (events.isEmpty()) {
             return List.of();
         }
@@ -337,12 +337,11 @@ public class EventServiceImpl implements ExistenceValidator<Event>, EventService
     }
 
     private Event getEventIfInitiatedByUser(long userId, long eventId) {
-        userRepository.findById(userId).orElseThrow(() ->
-                new NotFoundException("The required object was not found.", "User with id=" + userId + " was not found"));
+        findUserByIdOrElseThrow(userId);
         Event event = eventRepository.findById(eventId).orElseThrow(() ->
                 new NotFoundException("The required object was not found.", "Event with id=" + eventId + " was not found"));
 
-        if (event.getInitiatorId().getId() != userId) {
+        if (event.getInitiatorId() != userId) {
             log.info("User {} cannot manipulate with the event with id {}", userId, eventId);
             throw new ConflictException("For the requested operation the conditions are not met.",
                     "Only initiator of event can can manipulate with it");
@@ -351,8 +350,8 @@ public class EventServiceImpl implements ExistenceValidator<Event>, EventService
         return event;
     }
 
-    private User findUserByIdOrElseThrow(long userId) {
-        return userRepository.findById(userId).orElseThrow(() -> {
+    private UserDto findUserByIdOrElseThrow(long userId) {
+        return userFeignClient.findById(userId).orElseThrow(() -> {
             log.info("{}: user with id: {} was not found", className, userId);
             return new NotFoundException("The required object was not found.", "User with id=" + userId + " was not found");
         });

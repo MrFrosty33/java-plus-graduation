@@ -40,7 +40,6 @@ public class CommentServiceImpl implements CommentService, ExistenceValidator<Co
 
     private final CommentRepository commentRepository;
 
-    //todo меняем на Feign
     private final UserFeignClient userFeignClient;
     private final EventRepository eventRepository;
     private final ParticipationRequestRepository requestRepository;
