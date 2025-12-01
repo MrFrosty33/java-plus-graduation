@@ -12,12 +12,11 @@ import ru.yandex.practicum.explore.with.me.model.participation.NewParticipationR
 import ru.yandex.practicum.explore.with.me.model.participation.ParticipationRequest;
 import ru.yandex.practicum.explore.with.me.model.participation.ParticipationRequestDto;
 import ru.yandex.practicum.explore.with.me.model.participation.ParticipationRequestStatus;
-import ru.yandex.practicum.explore.with.me.model.user.User;
 import ru.yandex.practicum.explore.with.me.repository.EventRepository;
 import ru.yandex.practicum.explore.with.me.repository.ParticipationRequestRepository;
-import ru.yandex.practicum.explore.with.me.repository.UserRepository;
 import ru.yandex.practicum.interaction.api.exception.ConflictException;
 import ru.yandex.practicum.interaction.api.exception.NotFoundException;
+import ru.yandex.practicum.interaction.api.feign.UserFeignClient;
 import ru.yandex.practicum.interaction.api.util.DataProvider;
 import ru.yandex.practicum.interaction.api.util.ExistenceValidator;
 
@@ -32,17 +31,18 @@ public class ParticipationRequestServiceImpl implements ParticipationRequestServ
         ExistenceValidator<ParticipationRequest>, DataProvider<ParticipationRequestDto, ParticipationRequest> {
 
     private final String className = this.getClass().getSimpleName();
+    private static final String OBJECT_NOT_FOUND = "Required object was not found.";
+
     private final ParticipationRequestRepository participationRequestRepository;
-    private final UserRepository userRepository;
+    private final UserFeignClient userFeignClient;
     private final EventRepository eventRepository;
-    private final ExistenceValidator<User> userExistenceValidator;
     private final ExistenceValidator<Event> eventExistenceValidator;
     private final ParticipationRequestMapper participationRequestMapper;
 
 
     @Override
     public List<ParticipationRequestDto> find(Long userId) {
-        userExistenceValidator.validateExists(userId);
+        validateExists(userId);
 
         List<ParticipationRequestDto> result = participationRequestRepository.findAllByRequesterId(userId).stream()
                 .map(this::getDto)
@@ -66,15 +66,15 @@ public class ParticipationRequestServiceImpl implements ParticipationRequestServ
         }
 
         eventExistenceValidator.validateExists(eventId);
-        userExistenceValidator.validateExists(requesterId);
+        validateUserExists(requesterId);
 
         Event event = eventRepository.findById(eventId).get();
 
-        if (event.getInitiatorId().getId().equals(requesterId)) {
+        if (event.getInitiatorId().equals(requesterId)) {
             log.info("{}: attempt to create participationRequest by an event initiator with requesterId: {}, eventId: {}, " +
-                    "initiatorId: {}", className, requesterId, eventId, event.getInitiatorId().getId());
+                    "initiatorId: {}", className, requesterId, eventId, event.getInitiatorId());
             throw new ConflictException("Initiator can't create participation request.", "requesterId: "
-                    + requesterId + " equals to initiatorId: " + event.getInitiatorId().getId());
+                    + requesterId + " equals to initiatorId: " + event.getInitiatorId());
         }
 
         if (event.getPublishedOn() == null) {
@@ -118,8 +118,8 @@ public class ParticipationRequestServiceImpl implements ParticipationRequestServ
                             "ParticipationRequest with id=" + cancelParticipationRequest.getRequestId() +
                                     " was not found");
                 });
-        userExistenceValidator.validateExists(cancelParticipationRequest.getUserId());
-        if (!request.getRequester().getId().equals(cancelParticipationRequest.getUserId())) {
+        validateUserExists(cancelParticipationRequest.getUserId());
+        if (!request.getRequesterId().equals(cancelParticipationRequest.getUserId())) {
             log.info("{}: attempt to cancel participationRequest by not an owner", className);
             throw new ConflictException("Request can be cancelled only by an owner",
                     "User with id=" + cancelParticipationRequest.getUserId() +
@@ -139,13 +139,11 @@ public class ParticipationRequestServiceImpl implements ParticipationRequestServ
         Long userId = newParticipationRequest.getUserId();
         Long eventId = newParticipationRequest.getEventId();
 
+        validateUserExists(userId);
+
         ParticipationRequest entity = ParticipationRequest.builder()
                 .created(LocalDateTime.now())
-                .requester(userRepository.findById(userId).orElseThrow(() -> {
-                    log.info("{}: attempt to find user with id:{}", className, userId);
-                    return new NotFoundException("The required object was not found.",
-                            "User with id=" + userId + " was not found");
-                }))
+                .requesterId(userId)
                 .event(eventRepository.findById(eventId).orElseThrow(() -> {
                     log.info("{}: attempt to find event with id:{}", className, userId);
                     return new NotFoundException("The required object was not found.",
@@ -170,6 +168,17 @@ public class ParticipationRequestServiceImpl implements ParticipationRequestServ
             throw new NotFoundException("The required object was not found.",
                     "ParticipationRequest with id=" + id + " was not found");
         }
+    }
+
+    private void validateUserExists(Long userId) {
+        userFeignClient.findById(userId)
+                .orElseThrow(() -> {
+                            log.info("{}: attempt to find user with id: {}", className, userId);
+                            return new NotFoundException(
+                                    OBJECT_NOT_FOUND,
+                                    String.format("User with id: %d was not found", userId));
+                        }
+                );
     }
 
     @Override

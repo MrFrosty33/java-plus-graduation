@@ -16,7 +16,6 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 import ru.yandex.practicum.explore.with.me.model.event.Event;
-import ru.yandex.practicum.explore.with.me.model.user.User;
 
 import java.time.LocalDateTime;
 
@@ -38,10 +37,8 @@ public class ParticipationRequest {
     @JoinColumn(name = "event_id")
     private Event event;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "requester_id")
-    private User requester;
-    //todo переделать на long
+    @Column(name = "requester_id")
+    private Long requesterId;
 
     @Convert(converter = ParticipationRequestStatusConverter.class)
     private ParticipationRequestStatus status;
