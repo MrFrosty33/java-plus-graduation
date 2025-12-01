@@ -52,7 +52,7 @@ public class CommentServiceImpl implements CommentService, ExistenceValidator<Co
     @Override
     @Transactional(rollbackFor = Exception.class)
     public CommentDto getCommentById(Long id) {
-        CommentDto result = mapper.toDto(getOrThrow(id));
+        CommentDto result = mapToCommentDto(getOrThrow(id));
         log.info("{}: result of getCommentById({}): {}", className, id, result);
         return result;
     }
@@ -108,7 +108,7 @@ public class CommentServiceImpl implements CommentService, ExistenceValidator<Co
         comment.setAuthorId(author.getId());
         comment.setEvent(event);
 
-        CommentDto result = mapper.toDto(commentRepository.save(comment));
+        CommentDto result = mapToCommentDto(commentRepository.save(comment));
         log.info("{}: result of createComment(): {}", className, result);
         return result;
     }
@@ -170,7 +170,7 @@ public class CommentServiceImpl implements CommentService, ExistenceValidator<Co
         eventExistenceValidator.validateExists(eventId);
         List<CommentDto> result = commentRepository.findByEventIdOrderByCreatedOnDesc(eventId, pageable)
                 .stream()
-                .map(mapper::toDto)
+                .map(this::mapToCommentDto)
                 .toList();
         log.info("{}: result of getCommentsByEvent(): {}", className, result);
         return result;
@@ -193,6 +193,22 @@ public class CommentServiceImpl implements CommentService, ExistenceValidator<Co
                                     String.format("Comment with id: %d was not found", id));
                         }
                 );
+    }
+
+    private CommentDto mapToCommentDto(Comment comment) {
+        CommentDto result = mapper.toDto(comment);
+        UserDto userDto = userFeignClient.findById(comment.getAuthorId()).orElseThrow(() -> {
+                    log.info("{}: user with id: {} was not found", className, comment.getAuthorId());
+                    return new NotFoundException(
+                            OBJECT_NOT_FOUND,
+                            String.format("User with id: %d was not found", comment.getAuthorId()));
+                }
+        );
+
+        CommentDto.CommentAuthorDto authorDto = new CommentDto.CommentAuthorDto(userDto.getId(), userDto.getName());
+        result.setAuthorDto(authorDto);
+
+        return result;
     }
 
     @Override

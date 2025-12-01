@@ -12,7 +12,7 @@ import ru.yandex.practicum.interaction.api.mapper.UserMapper;
 @Mapper(componentModel = "spring", uses = {UserMapper.class, EventMapper.class})
 public interface CommentMapper {
     @Mapping(target = "eventDto", source = "event")
-    @Mapping(target = "authorDto", source = "author")
+    @Mapping(target = "authorDto", ignore = true)
     CommentDto toDto(Comment comment);
 
     @Mapping(target = "id", ignore = true)
