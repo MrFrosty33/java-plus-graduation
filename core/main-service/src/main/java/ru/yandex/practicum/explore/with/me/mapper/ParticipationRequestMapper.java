@@ -9,6 +9,6 @@ import ru.yandex.practicum.explore.with.me.model.participation.ParticipationRequ
 public interface ParticipationRequestMapper {
 
     @Mapping(target = "event", source = "event.id")
-    @Mapping(target = "requester", source = "requester.id")
+    @Mapping(target = "requester", source = "requesterId")
     ParticipationRequestDto toDto(ParticipationRequest entity);
 }
