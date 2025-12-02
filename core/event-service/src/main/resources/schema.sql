@@ -24,8 +24,7 @@ CREATE TABLE IF NOT EXISTS events
     state VARCHAR(10)
         CHECK (state IN ('pending', 'published', 'canceled')) NOT NULL,
     CONSTRAINT pk_event PRIMARY KEY (id),
-    CONSTRAINT fk_events_category FOREIGN KEY (category_id) REFERENCES categories (id),
-    CONSTRAINT fk_events_initiator FOREIGN KEY (initiator_id) REFERENCES users (id)
+    CONSTRAINT fk_events_category FOREIGN KEY (category_id) REFERENCES categories (id)
 );
 
 CREATE TABLE IF NOT EXISTS compilations
