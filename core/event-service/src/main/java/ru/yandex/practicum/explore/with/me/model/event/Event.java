@@ -1,7 +1,6 @@
 package ru.yandex.practicum.explore.with.me.model.event;
 
 
-import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Convert;
 import jakarta.persistence.Embedded;
@@ -12,21 +11,16 @@ import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
-import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 import ru.yandex.practicum.explore.with.me.model.category.Category;
-import ru.yandex.practicum.interaction.api.model.comment.Comment;
 import ru.yandex.practicum.interaction.api.model.event.EventState;
 import ru.yandex.practicum.interaction.api.model.event.Location;
-import ru.yandex.practicum.interaction.api.model.request.ParticipationRequest;
 
 import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.List;
 
 @Entity
 @Table(name = "events")
@@ -46,9 +40,6 @@ public class Event {
     @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "category_id")
     private Category category;
-
-    @OneToMany(mappedBy = "event", fetch = FetchType.LAZY, cascade = CascadeType.ALL)
-    private List<Comment> comments;
 
     @Column(name = "description", length = 7000)
     private String description;
@@ -77,7 +68,4 @@ public class Event {
 
     @Convert(converter = EventStateConverter.class)
     private EventState state;
-
-    @OneToMany(mappedBy = "event", cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<ParticipationRequest> requests = new ArrayList<>();
 }

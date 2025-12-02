@@ -30,7 +30,6 @@ public interface EventMapper {
     @Mapping(target = "state", ignore = true)
     @Mapping(target = "initiatorId", ignore = true)
     @Mapping(target = "category", ignore = true)
-    @Mapping(target = "comments", ignore = true)
     Event toModel(NewEventDto eventDto);
 
     @BeanMapping(nullValuePropertyMappingStrategy = NullValuePropertyMappingStrategy.IGNORE)

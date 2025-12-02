@@ -258,6 +258,7 @@ public class EventServiceImpl implements ExistenceValidator<Event>, EventService
 
     @Transactional(readOnly = true)
     public EventFullDto getPublicEventById(long eventId) {
+        //todo заполнять ещё и комментарии?
         Event event = eventRepository.findByIdAndState(eventId, EventState.PUBLISHED)
                 .orElseThrow(() -> {
                     log.info("{}: attempt to find event with id: {}", className, eventId);
