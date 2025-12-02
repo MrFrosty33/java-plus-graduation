@@ -32,11 +32,11 @@ import java.util.Optional;
 @RequiredArgsConstructor(onConstructor_ = @Autowired)
 @Slf4j
 @Validated
-public class UserAdminAdminController implements UserClient {
+public class UserAdminController implements UserClient {
     private final UserService service;
     private final String controllerName = this.getClass().getSimpleName();
 
-    @GetMapping
+    @GetMapping(params = {"ids", "from", "size"})
     public List<UserDto> find(@RequestParam(required = false)
                               List<Long> ids,
                               @RequestParam(defaultValue = "0")
@@ -56,7 +56,7 @@ public class UserAdminAdminController implements UserClient {
         return service.find(param);
     }
 
-    @GetMapping
+    @GetMapping(params = "id")
     public Optional<UserDto> findById(@RequestParam
                                       @Positive(message = "must be positive")
                                       Long id) {
