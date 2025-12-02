@@ -9,6 +9,7 @@ import ru.yandex.practicum.explore.with.me.model.event.dto.EventShortDto;
 import ru.yandex.practicum.explore.with.me.model.event.dto.EventViewsParameters;
 import ru.yandex.practicum.explore.with.me.model.event.dto.NewEventDto;
 import ru.yandex.practicum.explore.with.me.model.event.dto.UpdateEventUserRequest;
+import ru.yandex.practicum.interaction.api.model.comment.dto.CommentDto;
 import ru.yandex.practicum.interaction.api.model.event.dto.EventFullDto;
 import ru.yandex.practicum.interaction.api.model.request.ParticipationRequestDto;
 
@@ -39,4 +40,6 @@ public interface EventService {
     Map<Long, Integer> getConfirmedRequests(List<Long> eventIds);
 
     EventStatistics getEventStatistics(List<Event> events, LocalDateTime startStats, LocalDateTime endStats);
+
+    List<CommentDto> getCommentsByEvent(Long eventId, int from, int size);
 }

@@ -6,7 +6,6 @@ import jakarta.validation.constraints.Positive;
 import jakarta.validation.constraints.PositiveOrZero;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.data.domain.PageRequest;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpStatus;
 import org.springframework.validation.annotation.Validated;
@@ -35,7 +34,6 @@ import java.util.Objects;
 @Validated
 public class EventPublicController {
     private final EventService eventsService;
-    private final CommentService commentService;
     private final StatsSaver statsSaver;
     private final String className = this.getClass().getSimpleName();
 
@@ -84,6 +82,6 @@ public class EventPublicController {
                                                @RequestParam(defaultValue = "10") @Positive int size) {
         log.trace("{}: getCommentsByEvent() call with eventId: {}, from: {}, size: {}",
                 className, eventId, from, size);
-        return commentService.getCommentsByEvent(eventId, PageRequest.of(from / size, size));
+        return eventsService.getCommentsByEvent(eventId, from, size);
     }
 }

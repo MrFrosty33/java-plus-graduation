@@ -28,8 +28,10 @@ import ru.yandex.practicum.explore.with.me.stats.StatsGetter;
 import ru.yandex.practicum.interaction.api.exception.BadRequestException;
 import ru.yandex.practicum.interaction.api.exception.ConflictException;
 import ru.yandex.practicum.interaction.api.exception.NotFoundException;
+import ru.yandex.practicum.interaction.api.feign.CommentClient;
 import ru.yandex.practicum.interaction.api.feign.RequestClient;
 import ru.yandex.practicum.interaction.api.feign.UserClient;
+import ru.yandex.practicum.interaction.api.model.comment.dto.CommentDto;
 import ru.yandex.practicum.interaction.api.model.event.EventState;
 import ru.yandex.practicum.interaction.api.model.event.dto.EventFullDto;
 import ru.yandex.practicum.interaction.api.model.event.dto.EventRequestCount;
@@ -56,6 +58,7 @@ public class EventServiceImpl implements ExistenceValidator<Event>, EventService
 
     private final EventRepository eventRepository;
     private final UserClient userClient;
+    private final CommentClient commentClient;
     private final CategoryRepository categoryRepository;
     private final EventMapper eventMapper;
     private final StatsGetter statsGetter;
@@ -91,6 +94,15 @@ public class EventServiceImpl implements ExistenceValidator<Event>, EventService
         EventStatistics stats = getEventStatistics(events, startStats, endStats);
         EventFullDto result = eventMapper.toFullDtoWithStats(event, stats);
         log.info("{}: result of getPrivateEventById(): {}", className, result);
+        return result;
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<CommentDto> getCommentsByEvent(Long eventId, int from, int size) {
+        validateExists(eventId);
+        List<CommentDto> result = commentClient.getCommentsByEvent(eventId, from, size);
+        log.info("{}: result of getCommentsByEvent(): {}", commentClient, result);
         return result;
     }
 

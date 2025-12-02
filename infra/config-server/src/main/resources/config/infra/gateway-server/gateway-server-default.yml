@@ -23,7 +23,7 @@ spring:
         - id: comment_service_route
           uri: lb://comment-service
           predicates:
-            - Path=/events/*/comments/**,/admin/comments/**,/users/*/comments/**
+            - Path=/admin/comments/**,/users/*/comments/**
           filters:
             - CircuitBreaker=commentServiceCircuitBreaker
 

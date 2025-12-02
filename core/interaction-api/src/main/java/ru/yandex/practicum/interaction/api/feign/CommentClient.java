@@ -17,7 +17,7 @@ import java.util.List;
 @FeignClient(name = "comment-service", fallback = CommentFallback.class)
 public interface CommentClient {
 
-    @GetMapping("/events/{eventId}/comments")
+    @GetMapping("/internal/{eventId}/comments")
     @ResponseStatus(HttpStatus.OK)
     List<CommentDto> getCommentsByEvent(@PathVariable @PositiveOrZero @NotNull Long eventId,
                                         @RequestParam(defaultValue = "0") @PositiveOrZero int from,
