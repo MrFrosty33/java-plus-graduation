@@ -18,25 +18,23 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
-import ru.yandex.practicum.interaction.api.feign.UserClient;
 import ru.yandex.practicum.interaction.api.model.user.AdminUserFindParam;
 import ru.yandex.practicum.interaction.api.model.user.NewUserRequest;
 import ru.yandex.practicum.interaction.api.model.user.UserDto;
 import ru.yandex.practicum.user.service.UserService;
 
 import java.util.List;
-import java.util.Optional;
 
 @RestController
 @RequestMapping("/admin/users")
 @RequiredArgsConstructor(onConstructor_ = @Autowired)
 @Slf4j
 @Validated
-public class UserAdminController implements UserClient {
+public class UserAdminController {
     private final UserService service;
     private final String controllerName = this.getClass().getSimpleName();
 
-    @GetMapping(params = {"ids", "from", "size"})
+    @GetMapping
     public List<UserDto> find(@RequestParam(required = false)
                               List<Long> ids,
                               @RequestParam(defaultValue = "0")
@@ -54,14 +52,6 @@ public class UserAdminController implements UserClient {
                 .size(size)
                 .build();
         return service.find(param);
-    }
-
-    @GetMapping(params = "id")
-    public Optional<UserDto> findById(@RequestParam
-                                      @Positive(message = "must be positive")
-                                      Long id) {
-        log.trace("{}: findById() call with id: {}", controllerName, id);
-        return service.findById(id);
     }
 
     @PostMapping
