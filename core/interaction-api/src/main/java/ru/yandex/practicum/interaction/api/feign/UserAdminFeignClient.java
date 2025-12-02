@@ -14,8 +14,7 @@ import java.util.Optional;
 
 @FeignClient(name = "user-service", fallback = UserAdminFallback.class)
 public interface UserAdminFeignClient {
-    //todo fix mapping
-    @GetMapping
+    @GetMapping("/admin/users")
     List<UserDto> find(@RequestParam(required = false)
                        List<Long> ids,
                        @RequestParam(defaultValue = "0")
@@ -26,6 +25,6 @@ public interface UserAdminFeignClient {
                        int size,
                        HttpServletRequest request);
 
-    @GetMapping
+    @GetMapping("/admin/users")
     Optional<UserDto> findById(@RequestParam @Positive Long id);
 }

@@ -15,27 +15,27 @@ import java.util.List;
 
 @FeignClient(name = "request-service", fallback = RequestInternalFeignClient.class)
 public interface RequestInternalFeignClient {
-    @GetMapping(params = "requestIds")
+    @GetMapping(path = "/internal/requests", params = "requestIds")
     List<ParticipationRequestDto> findAllById(@RequestParam
                                               @NotNull
                                               @NotEmpty
                                               List<Long> requestIds);
 
-    @GetMapping(params = "eventId")
+    @GetMapping(path = "/internal/requests", params = "eventId")
     List<ParticipationRequestDto> findAllByEventId(@RequestParam @Positive long eventId);
 
-    @GetMapping(params = {"eventId", "status"})
+    @GetMapping(path = "/internal/requests", params = {"eventId", "status"})
     List<ParticipationRequestDto> findAllByEventIdAndStatus(@RequestParam @Positive long eventId,
                                                             @RequestParam ParticipationRequestStatus status);
 
-    @PostMapping("/status/update")
+    @PostMapping("/internal/requests/status/update")
     void updateStatus(@RequestParam
                       @NotNull
                       @NotEmpty
                       List<Long> requestIds,
                       ParticipationRequestStatus status);
 
-    @GetMapping("/count")
+    @GetMapping("/internal/requests/count")
     List<EventRequestCount> countGroupByEventId(@RequestParam
                                                 @NotNull
                                                 @NotEmpty
