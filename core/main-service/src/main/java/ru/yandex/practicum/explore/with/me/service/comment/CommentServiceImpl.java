@@ -14,11 +14,11 @@ import ru.yandex.practicum.explore.with.me.model.comment.CreateUpdateCommentDto;
 import ru.yandex.practicum.explore.with.me.model.event.Event;
 import ru.yandex.practicum.explore.with.me.repository.CommentRepository;
 import ru.yandex.practicum.explore.with.me.repository.EventRepository;
-import ru.yandex.practicum.explore.with.me.repository.ParticipationRequestRepository;
 import ru.yandex.practicum.interaction.api.exception.BadRequestException;
 import ru.yandex.practicum.interaction.api.exception.ConflictException;
 import ru.yandex.practicum.interaction.api.exception.ForbiddenException;
 import ru.yandex.practicum.interaction.api.exception.NotFoundException;
+import ru.yandex.practicum.interaction.api.feign.RequestClient;
 import ru.yandex.practicum.interaction.api.feign.UserClient;
 import ru.yandex.practicum.interaction.api.model.comment.dto.CommentDto;
 import ru.yandex.practicum.interaction.api.model.request.ParticipationRequestStatus;
@@ -42,7 +42,7 @@ public class CommentServiceImpl implements CommentService, ExistenceValidator<Co
 
     private final UserClient userClient;
     private final EventRepository eventRepository;
-    private final ParticipationRequestRepository requestRepository;
+    private final RequestClient requestClient;
     private final ExistenceValidator<Event> eventExistenceValidator;
     private final CommentMapper mapper;
 
@@ -93,7 +93,7 @@ public class CommentServiceImpl implements CommentService, ExistenceValidator<Co
             throw new ConflictException(CONDITIONS_NOT_MET, "Only past events can be commented on");
         }
 
-        if (!requestRepository
+        if (!requestClient
                 .existsByRequesterIdAndEventIdAndStatus(
                         userId,
                         eventId,
