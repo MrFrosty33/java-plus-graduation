@@ -1,4 +1,4 @@
-package ru.yandex.practicum.explore.with.me.controller.participation.request;
+package ru.yandex.practicum.request.controller;
 
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.PositiveOrZero;

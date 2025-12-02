@@ -13,7 +13,6 @@ import ru.yandex.practicum.explore.with.me.model.comment.CommentUpdateDto;
 import ru.yandex.practicum.explore.with.me.model.comment.CommentUserDto;
 import ru.yandex.practicum.explore.with.me.model.comment.CreateUpdateCommentDto;
 import ru.yandex.practicum.explore.with.me.model.event.Event;
-import ru.yandex.practicum.explore.with.me.model.participation.ParticipationRequestStatus;
 import ru.yandex.practicum.explore.with.me.repository.CommentRepository;
 import ru.yandex.practicum.explore.with.me.repository.EventRepository;
 import ru.yandex.practicum.explore.with.me.repository.ParticipationRequestRepository;
@@ -22,6 +21,7 @@ import ru.yandex.practicum.interaction.api.exception.ConflictException;
 import ru.yandex.practicum.interaction.api.exception.ForbiddenException;
 import ru.yandex.practicum.interaction.api.exception.NotFoundException;
 import ru.yandex.practicum.interaction.api.feign.UserFeignClient;
+import ru.yandex.practicum.interaction.api.model.request.ParticipationRequestStatus;
 import ru.yandex.practicum.interaction.api.model.user.UserDto;
 import ru.yandex.practicum.interaction.api.util.ExistenceValidator;
 

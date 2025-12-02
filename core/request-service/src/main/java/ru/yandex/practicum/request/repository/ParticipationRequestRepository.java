@@ -1,12 +1,12 @@
-package ru.yandex.practicum.explore.with.me.repository;
+package ru.yandex.practicum.request.repository;
 
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import ru.yandex.practicum.explore.with.me.model.event.dto.EventRequestCount;
-import ru.yandex.practicum.explore.with.me.model.participation.ParticipationRequest;
-import ru.yandex.practicum.explore.with.me.model.participation.ParticipationRequestStatus;
+import ru.yandex.practicum.interaction.api.model.request.ParticipationRequest;
+import ru.yandex.practicum.interaction.api.model.request.ParticipationRequestStatus;
 
 import java.util.List;
 

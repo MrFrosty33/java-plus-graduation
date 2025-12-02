@@ -1,22 +1,22 @@
-package ru.yandex.practicum.explore.with.me.service.participation.request;
+package ru.yandex.practicum.request.service;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import ru.yandex.practicum.explore.with.me.mapper.ParticipationRequestMapper;
 import ru.yandex.practicum.explore.with.me.model.event.Event;
-import ru.yandex.practicum.explore.with.me.model.participation.CancelParticipationRequest;
-import ru.yandex.practicum.explore.with.me.model.participation.NewParticipationRequest;
-import ru.yandex.practicum.explore.with.me.model.participation.ParticipationRequest;
-import ru.yandex.practicum.explore.with.me.model.participation.ParticipationRequestDto;
-import ru.yandex.practicum.explore.with.me.model.participation.ParticipationRequestStatus;
 import ru.yandex.practicum.explore.with.me.repository.EventRepository;
 import ru.yandex.practicum.explore.with.me.repository.ParticipationRequestRepository;
 import ru.yandex.practicum.interaction.api.exception.ConflictException;
 import ru.yandex.practicum.interaction.api.exception.NotFoundException;
 import ru.yandex.practicum.interaction.api.feign.UserFeignClient;
+import ru.yandex.practicum.interaction.api.mapper.ParticipationRequestMapper;
+import ru.yandex.practicum.interaction.api.model.request.CancelParticipationRequest;
+import ru.yandex.practicum.interaction.api.model.request.NewParticipationRequest;
+import ru.yandex.practicum.interaction.api.model.request.ParticipationRequest;
+import ru.yandex.practicum.interaction.api.model.request.ParticipationRequestDto;
+import ru.yandex.practicum.interaction.api.model.request.ParticipationRequestStatus;
 import ru.yandex.practicum.interaction.api.util.DataProvider;
 import ru.yandex.practicum.interaction.api.util.ExistenceValidator;
 

@@ -1,4 +1,4 @@
-package ru.yandex.practicum.explore.with.me.model.participation;
+package ru.yandex.practicum.interaction.api.model.request;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Convert;
@@ -36,6 +36,7 @@ public class ParticipationRequest {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "event_id")
     private Event event;
+    //todo переход на id здесь и далее
 
     @Column(name = "requester_id")
     private Long requesterId;

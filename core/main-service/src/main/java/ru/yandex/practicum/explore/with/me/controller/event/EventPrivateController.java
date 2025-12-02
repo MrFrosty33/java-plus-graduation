@@ -23,8 +23,8 @@ import ru.yandex.practicum.explore.with.me.model.event.dto.EventRequestStatusUpd
 import ru.yandex.practicum.explore.with.me.model.event.dto.EventShortDto;
 import ru.yandex.practicum.explore.with.me.model.event.dto.NewEventDto;
 import ru.yandex.practicum.explore.with.me.model.event.dto.UpdateEventUserRequest;
-import ru.yandex.practicum.explore.with.me.model.participation.ParticipationRequestDto;
 import ru.yandex.practicum.explore.with.me.service.event.EventService;
+import ru.yandex.practicum.interaction.api.model.request.ParticipationRequestDto;
 
 import java.util.List;
 

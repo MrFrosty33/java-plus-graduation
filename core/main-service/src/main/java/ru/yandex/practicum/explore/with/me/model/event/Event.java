@@ -20,7 +20,7 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 import ru.yandex.practicum.explore.with.me.model.category.Category;
 import ru.yandex.practicum.explore.with.me.model.comment.Comment;
-import ru.yandex.practicum.explore.with.me.model.participation.ParticipationRequest;
+import ru.yandex.practicum.interaction.api.model.request.ParticipationRequest;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
