@@ -26,4 +26,8 @@ public interface ParticipationRequestService {
     void updateStatus(List<Long> requestIds, ParticipationRequestStatus status);
 
     List<EventRequestCount> countGroupByEventId(List<Long> eventIds);
+
+    boolean existsByRequesterIdAndEventIdAndStatus(Long requesterId,
+                                                   Long eventId,
+                                                   ParticipationRequestStatus status);
 }

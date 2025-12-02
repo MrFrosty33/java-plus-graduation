@@ -40,4 +40,9 @@ public interface RequestInternalFeignClient {
                                                 @NotNull
                                                 @NotEmpty
                                                 List<Long> eventIds);
+
+    @GetMapping("/internal/requests/exists")
+    boolean existsByRequesterIdAndEventIdAndStatus(@RequestParam @NotNull @Positive Long requesterId,
+                                                   @RequestParam @NotNull @Positive Long eventId,
+                                                   ParticipationRequestStatus status);
 }

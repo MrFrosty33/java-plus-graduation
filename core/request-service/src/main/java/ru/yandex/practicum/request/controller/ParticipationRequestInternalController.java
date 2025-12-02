@@ -69,4 +69,13 @@ public class ParticipationRequestInternalController implements RequestInternalFe
         log.trace("{}: countGroupByEventId() call with eventIds: {}", controllerName, eventIds);
         return service.countGroupByEventId(eventIds);
     }
+
+    @GetMapping("/exists")
+    public boolean existsByRequesterIdAndEventIdAndStatus(@RequestParam @NotNull @Positive Long requesterId,
+                                                          @RequestParam @NotNull @Positive Long eventId,
+                                                          ParticipationRequestStatus status) {
+        log.trace("{}: existsByRequesterIdAndEventIdAndStatus() call with requesterId: {}, eventId: {} and status: {}",
+                controllerName, requesterId, eventId, status);
+        return service.existsByRequesterIdAndEventIdAndStatus(requesterId, eventId, status);
+    }
 }
