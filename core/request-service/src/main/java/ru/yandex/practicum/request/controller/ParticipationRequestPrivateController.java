@@ -15,10 +15,10 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
-import ru.yandex.practicum.explore.with.me.model.participation.CancelParticipationRequest;
-import ru.yandex.practicum.explore.with.me.model.participation.NewParticipationRequest;
-import ru.yandex.practicum.explore.with.me.model.participation.ParticipationRequestDto;
-import ru.yandex.practicum.explore.with.me.service.participation.request.ParticipationRequestService;
+import ru.yandex.practicum.interaction.api.model.request.CancelParticipationRequest;
+import ru.yandex.practicum.interaction.api.model.request.NewParticipationRequest;
+import ru.yandex.practicum.interaction.api.model.request.ParticipationRequestDto;
+import ru.yandex.practicum.request.service.ParticipationRequestService;
 
 import java.util.List;
 

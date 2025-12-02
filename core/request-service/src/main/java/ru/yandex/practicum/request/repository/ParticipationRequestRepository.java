@@ -4,7 +4,7 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
-import ru.yandex.practicum.explore.with.me.model.event.dto.EventRequestCount;
+import ru.yandex.practicum.interaction.api.model.event.dto.EventRequestCount;
 import ru.yandex.practicum.interaction.api.model.request.ParticipationRequest;
 import ru.yandex.practicum.interaction.api.model.request.ParticipationRequestStatus;
 
@@ -24,7 +24,7 @@ public interface ParticipationRequestRepository extends JpaRepository<Participat
     int countByEventId(Long eventId);
 
     @Query("""
-                SELECT new ru.yandex.practicum.explore.with.me.model.event.dto.EventRequestCount(r.event.id, COUNT(r))
+                SELECT new ru.yandex.practicum.interaction.api.model.event.dto.EventRequestCount(r.event.id, COUNT(r))
                     FROM ParticipationRequest r
                     WHERE r.event.id IN :eventIds
                     AND r.status = 'confirmed'

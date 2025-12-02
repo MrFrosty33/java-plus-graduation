@@ -5,9 +5,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import ru.yandex.practicum.explore.with.me.model.event.Event;
-import ru.yandex.practicum.explore.with.me.repository.EventRepository;
-import ru.yandex.practicum.explore.with.me.repository.ParticipationRequestRepository;
 import ru.yandex.practicum.interaction.api.exception.ConflictException;
 import ru.yandex.practicum.interaction.api.exception.NotFoundException;
 import ru.yandex.practicum.interaction.api.feign.UserAdminFeignClient;
@@ -19,6 +16,7 @@ import ru.yandex.practicum.interaction.api.model.request.ParticipationRequestDto
 import ru.yandex.practicum.interaction.api.model.request.ParticipationRequestStatus;
 import ru.yandex.practicum.interaction.api.util.DataProvider;
 import ru.yandex.practicum.interaction.api.util.ExistenceValidator;
+import ru.yandex.practicum.request.repository.ParticipationRequestRepository;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -36,6 +34,7 @@ public class ParticipationRequestServiceImpl implements ParticipationRequestServ
     private final ParticipationRequestRepository participationRequestRepository;
     private final UserAdminFeignClient userAdminFeignClient;
     private final EventRepository eventRepository;
+    //todo Feign
     private final ExistenceValidator<Event> eventExistenceValidator;
     private final ParticipationRequestMapper participationRequestMapper;
 

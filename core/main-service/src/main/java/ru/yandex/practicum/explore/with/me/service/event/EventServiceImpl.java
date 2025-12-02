@@ -16,7 +16,6 @@ import ru.yandex.practicum.explore.with.me.model.event.EventState;
 import ru.yandex.practicum.explore.with.me.model.event.EventStatistics;
 import ru.yandex.practicum.explore.with.me.model.event.PublicEventParam;
 import ru.yandex.practicum.explore.with.me.model.event.dto.EventFullDto;
-import ru.yandex.practicum.explore.with.me.model.event.dto.EventRequestCount;
 import ru.yandex.practicum.explore.with.me.model.event.dto.EventRequestStatusUpdateRequest;
 import ru.yandex.practicum.explore.with.me.model.event.dto.EventRequestStatusUpdateResult;
 import ru.yandex.practicum.explore.with.me.model.event.dto.EventShortDto;
@@ -34,6 +33,7 @@ import ru.yandex.practicum.interaction.api.exception.ConflictException;
 import ru.yandex.practicum.interaction.api.exception.NotFoundException;
 import ru.yandex.practicum.interaction.api.feign.UserAdminFeignClient;
 import ru.yandex.practicum.interaction.api.mapper.ParticipationRequestMapper;
+import ru.yandex.practicum.interaction.api.model.event.dto.EventRequestCount;
 import ru.yandex.practicum.interaction.api.model.request.ParticipationRequest;
 import ru.yandex.practicum.interaction.api.model.request.ParticipationRequestDto;
 import ru.yandex.practicum.interaction.api.model.request.ParticipationRequestStatus;
@@ -62,6 +62,7 @@ public class EventServiceImpl implements ExistenceValidator<Event>, EventService
     private final EventMapper eventMapper;
     private final StatsGetter statsGetter;
     private final ParticipationRequestRepository requestRepository;
+    //todo Feign
     private final ParticipationRequestMapper requestMapper;
 
     @Transactional
