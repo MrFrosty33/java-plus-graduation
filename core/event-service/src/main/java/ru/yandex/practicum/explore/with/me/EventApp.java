@@ -8,8 +8,8 @@ import org.springframework.cloud.openfeign.EnableFeignClients;
 @SpringBootApplication(scanBasePackages = {"ru.yandex.practicum.explore.with.me", "ru.yandex.practicum.stats"})
 @EnableFeignClients(basePackages = "ru.yandex.practicum.interaction.api.feign")
 @ConfigurationPropertiesScan
-public class MainApp {
+public class EventApp {
     public static void main(String[] args) {
-        SpringApplication.run(MainApp.class, args);
+        SpringApplication.run(EventApp.class, args);
     }
 }

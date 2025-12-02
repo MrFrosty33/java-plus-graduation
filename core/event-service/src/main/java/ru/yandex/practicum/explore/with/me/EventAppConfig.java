@@ -7,7 +7,7 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
 @Configuration
-public class MainAppConfig {
+public class EventAppConfig {
 
     @Bean
     public ObjectMapper objectMapper() {
