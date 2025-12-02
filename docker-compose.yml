@@ -75,10 +75,10 @@ services:
 
 
   # БД для main сервиса
-  ewm-db:
+  event-db:
     image: postgres:16.1
     environment:
-      POSTGRES_DB: ewm
+      POSTGRES_DB: event
       POSTGRES_USER: main
       POSTGRES_PASSWORD: main
     ports:
@@ -96,11 +96,25 @@ services:
     volumes:
       - ./db:/docker-entrypoint-initdb.d
 
-  # main сервис
-  ewm-service:
+  # event сервис
+  event-service:
     build:
       context: .
-      dockerfile: core/main-service/Dockerfile
+      dockerfile: core/event-service/Dockerfile
+    environment:
+      EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://discovery-server:8761/eureka/
+      SPRING_DATASOURCE_URL: jdbc:postgresql://event-db:5432/event
+      SPRING_DATASOURCE_USERNAME: main
+      SPRING_DATASOURCE_PASSWORD: main
+    depends_on:
+      config-server:
+        condition: service_healthy
+
+  # user сервис
+  user-service:
+    build:
+      context: .
+      dockerfile: core/user-service/Dockerfile
     environment:
       EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://discovery-server:8761/eureka/
       SPRING_DATASOURCE_URL: jdbc:postgresql://ewm-db:5432/ewm
