@@ -29,4 +29,6 @@ public class UserApp {
     //todo 3) переносим какую-то свою функциональность
 
     //todo 4) переименовываем main-service -> event-service
+
+    //todo не забыть добавлять руты
 }

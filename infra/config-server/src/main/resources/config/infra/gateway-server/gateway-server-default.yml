@@ -13,6 +13,13 @@ spring:
           filters:
             - CircuitBreaker=userServiceCircuitBreaker
 
+        - id: request_service_route
+          uri: lb://request-service
+          predicates:
+            - Path=/users/*/requests/**
+          filters:
+            - CircuitBreaker=requestServiceCircuitBreaker
+
         - id: main_service_route
           uri: lb://main-service
           predicates:
