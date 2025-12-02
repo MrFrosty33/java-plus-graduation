@@ -14,6 +14,7 @@ import java.util.Optional;
 
 @FeignClient(name = "user-service", fallback = UserAdminFallback.class)
 public interface UserAdminFeignClient {
+    //todo fix mapping
     @GetMapping
     List<UserDto> find(@RequestParam(required = false)
                        List<Long> ids,

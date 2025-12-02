@@ -62,7 +62,7 @@ public class EventServiceImpl implements ExistenceValidator<Event>, EventService
     private final EventMapper eventMapper;
     private final StatsGetter statsGetter;
     private final ParticipationRequestRepository requestRepository;
-    //todo Feign
+    //todo Feign, передавать каждый раз userId?
     private final ParticipationRequestMapper requestMapper;
 
     @Transactional
