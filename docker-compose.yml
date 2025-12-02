@@ -74,7 +74,7 @@ services:
         condition: service_healthy
 
 
-  # БД для main сервиса
+  # БД для event сервиса
   event-db:
     image: postgres:16.1
     environment:
@@ -117,9 +117,37 @@ services:
       dockerfile: core/user-service/Dockerfile
     environment:
       EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://discovery-server:8761/eureka/
-      SPRING_DATASOURCE_URL: jdbc:postgresql://ewm-db:5432/ewm
-      SPRING_DATASOURCE_USERNAME: main
-      SPRING_DATASOURCE_PASSWORD: main
+      SPRING_DATASOURCE_URL: jdbc:postgresql://microservices:5432/core_users
+      SPRING_DATASOURCE_USERNAME: frosty
+      SPRING_DATASOURCE_PASSWORD: ytsorf
+    depends_on:
+      config-server:
+        condition: service_healthy
+
+  # request сервис
+  request-service:
+    build:
+      context: .
+      dockerfile: core/request-service/Dockerfile
+    environment:
+      EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://discovery-server:8761/eureka/
+      SPRING_DATASOURCE_URL: jdbc:postgresql://microservices:5432/core_requests
+      SPRING_DATASOURCE_USERNAME: frosty
+      SPRING_DATASOURCE_PASSWORD: ytsorf
+    depends_on:
+      config-server:
+        condition: service_healthy
+
+  # comment сервис
+  comment-service:
+    build:
+      context: .
+      dockerfile: core/comment-service/Dockerfile
+    environment:
+      EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://discovery-server:8761/eureka/
+      SPRING_DATASOURCE_URL: jdbc:postgresql://microservices:5432/core_comments
+      SPRING_DATASOURCE_USERNAME: frosty
+      SPRING_DATASOURCE_PASSWORD: ytsorf
     depends_on:
       config-server:
         condition: service_healthy
