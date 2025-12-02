@@ -21,9 +21,7 @@ CREATE TABLE IF NOT EXISTS participation_requests (
     requester_id BIGINT NOT NULL,
     status VARCHAR(15)
         CHECK (status IN ('confirmed', 'rejected', 'pending')) NOT NULL,
-    CONSTRAINT pk_participation_requests PRIMARY KEY (id),
-    CONSTRAINT fk_requests_events FOREIGN KEY (event_id) REFERENCES events (id),
-    CONSTRAINT fk_requests_users FOREIGN KEY (requester_id) REFERENCES users (id)
+    CONSTRAINT pk_participation_requests PRIMARY KEY (id)
 );
 
 \connect core_comments;
@@ -36,7 +34,5 @@ CREATE TABLE IF NOT EXISTS comments
     event_id BIGINT NOT NULL,
     created TIMESTAMP NOT NULL,
     updated TIMESTAMP,
-    CONSTRAINT pk_comments PRIMARY KEY (id),
-    CONSTRAINT fk_comments_events FOREIGN KEY (event_id) REFERENCES events (id),
-    CONSTRAINT fk_comments_users FOREIGN KEY (author_id) REFERENCES users (id)
+    CONSTRAINT pk_comments PRIMARY KEY (id)
 );

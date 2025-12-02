@@ -6,7 +6,5 @@ CREATE TABLE IF NOT EXISTS comments
     event_id BIGINT NOT NULL,
     created TIMESTAMP NOT NULL,
     updated TIMESTAMP,
-    CONSTRAINT pk_comments PRIMARY KEY (id),
-    CONSTRAINT fk_comments_events FOREIGN KEY (event_id) REFERENCES events (id),
-    CONSTRAINT fk_comments_users FOREIGN KEY (author_id) REFERENCES users (id)
+    CONSTRAINT pk_comments PRIMARY KEY (id)
 );
