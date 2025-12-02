@@ -1,4 +1,4 @@
-package ru.yandex.practicum.explore.with.me.service.comment;
+package ru.yandex.practicum.comment.service;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -6,21 +6,19 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
-import ru.yandex.practicum.explore.with.me.mapper.CommentMapper;
-import ru.yandex.practicum.explore.with.me.model.comment.Comment;
-import ru.yandex.practicum.explore.with.me.model.comment.CommentUpdateDto;
-import ru.yandex.practicum.explore.with.me.model.comment.CommentUserDto;
-import ru.yandex.practicum.explore.with.me.model.comment.CreateUpdateCommentDto;
-import ru.yandex.practicum.explore.with.me.model.event.Event;
-import ru.yandex.practicum.explore.with.me.repository.CommentRepository;
-import ru.yandex.practicum.explore.with.me.repository.EventRepository;
+import ru.yandex.practicum.comment.repository.CommentRepository;
 import ru.yandex.practicum.interaction.api.exception.BadRequestException;
 import ru.yandex.practicum.interaction.api.exception.ConflictException;
 import ru.yandex.practicum.interaction.api.exception.ForbiddenException;
 import ru.yandex.practicum.interaction.api.exception.NotFoundException;
 import ru.yandex.practicum.interaction.api.feign.RequestClient;
 import ru.yandex.practicum.interaction.api.feign.UserClient;
+import ru.yandex.practicum.interaction.api.mapper.CommentMapper;
+import ru.yandex.practicum.interaction.api.model.comment.Comment;
 import ru.yandex.practicum.interaction.api.model.comment.dto.CommentDto;
+import ru.yandex.practicum.interaction.api.model.comment.dto.CommentUpdateDto;
+import ru.yandex.practicum.interaction.api.model.comment.dto.CommentUserDto;
+import ru.yandex.practicum.interaction.api.model.comment.dto.CreateUpdateCommentDto;
 import ru.yandex.practicum.interaction.api.model.request.ParticipationRequestStatus;
 import ru.yandex.practicum.interaction.api.model.user.UserDto;
 import ru.yandex.practicum.interaction.api.util.ExistenceValidator;
@@ -42,6 +40,7 @@ public class CommentServiceImpl implements CommentService, ExistenceValidator<Co
 
     private final UserClient userClient;
     private final EventRepository eventRepository;
+    //todo Feign
     private final RequestClient requestClient;
     private final ExistenceValidator<Event> eventExistenceValidator;
     private final CommentMapper mapper;

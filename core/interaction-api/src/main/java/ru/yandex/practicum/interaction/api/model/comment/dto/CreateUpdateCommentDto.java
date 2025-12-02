@@ -1,4 +1,4 @@
-package ru.yandex.practicum.explore.with.me.model.comment;
+package ru.yandex.practicum.interaction.api.model.comment.dto;
 
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;

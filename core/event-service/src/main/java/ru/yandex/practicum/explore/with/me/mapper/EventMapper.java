@@ -10,6 +10,7 @@ import ru.yandex.practicum.explore.with.me.model.event.EventStatistics;
 import ru.yandex.practicum.explore.with.me.model.event.dto.EventShortDto;
 import ru.yandex.practicum.explore.with.me.model.event.dto.NewEventDto;
 import ru.yandex.practicum.explore.with.me.model.event.dto.UpdateEventAdminRequestDto;
+import ru.yandex.practicum.interaction.api.mapper.CommentMapper;
 import ru.yandex.practicum.interaction.api.mapper.UserMapper;
 import ru.yandex.practicum.interaction.api.model.event.dto.EventFullDto;
 
