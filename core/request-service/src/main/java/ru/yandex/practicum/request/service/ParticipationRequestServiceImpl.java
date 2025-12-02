@@ -10,7 +10,7 @@ import ru.yandex.practicum.explore.with.me.repository.EventRepository;
 import ru.yandex.practicum.explore.with.me.repository.ParticipationRequestRepository;
 import ru.yandex.practicum.interaction.api.exception.ConflictException;
 import ru.yandex.practicum.interaction.api.exception.NotFoundException;
-import ru.yandex.practicum.interaction.api.feign.UserFeignClient;
+import ru.yandex.practicum.interaction.api.feign.UserAdminFeignClient;
 import ru.yandex.practicum.interaction.api.mapper.ParticipationRequestMapper;
 import ru.yandex.practicum.interaction.api.model.request.CancelParticipationRequest;
 import ru.yandex.practicum.interaction.api.model.request.NewParticipationRequest;
@@ -34,7 +34,7 @@ public class ParticipationRequestServiceImpl implements ParticipationRequestServ
     private static final String OBJECT_NOT_FOUND = "Required object was not found.";
 
     private final ParticipationRequestRepository participationRequestRepository;
-    private final UserFeignClient userFeignClient;
+    private final UserAdminFeignClient userAdminFeignClient;
     private final EventRepository eventRepository;
     private final ExistenceValidator<Event> eventExistenceValidator;
     private final ParticipationRequestMapper participationRequestMapper;
@@ -171,7 +171,7 @@ public class ParticipationRequestServiceImpl implements ParticipationRequestServ
     }
 
     private void validateUserExists(Long userId) {
-        userFeignClient.findById(userId)
+        userAdminFeignClient.findById(userId)
                 .orElseThrow(() -> {
                             log.info("{}: attempt to find user with id: {}", className, userId);
                             return new NotFoundException(
