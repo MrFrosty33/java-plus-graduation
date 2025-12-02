@@ -24,11 +24,11 @@ public interface ParticipationRequestRepository extends JpaRepository<Participat
     int countByEventId(Long eventId);
 
     @Query("""
-                SELECT new ru.yandex.practicum.interaction.api.model.event.dto.EventRequestCount(r.event.id, COUNT(r))
+                SELECT new ru.yandex.practicum.interaction.api.model.event.dto.EventRequestCount(r.eventId, COUNT(r))
                     FROM ParticipationRequest r
-                    WHERE r.event.id IN :eventIds
+                    WHERE r.eventId IN :eventIds
                     AND r.status = 'confirmed'
-                    GROUP BY r.event.id
+                    GROUP BY r.eventId
             """)
     List<EventRequestCount> countGroupByEventId(@Param("eventIds") List<Long> eventIds);
 
