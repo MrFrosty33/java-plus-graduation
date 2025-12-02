@@ -4,11 +4,10 @@ import com.fasterxml.jackson.annotation.JsonFormat;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import ru.yandex.practicum.explore.with.me.model.category.CategoryDto;
-import ru.yandex.practicum.explore.with.me.model.comment.CommentDto;
-import ru.yandex.practicum.explore.with.me.model.event.EventState;
-import ru.yandex.practicum.explore.with.me.model.event.Location;
-import ru.yandex.practicum.interaction.api.model.user.UserShortDto;
+import ru.yandex.practicum.interaction.api.model.category.dto.CategoryDto;
+import ru.yandex.practicum.interaction.api.model.comment.dto.CommentDto;
+import ru.yandex.practicum.interaction.api.model.event.EventState;
+import ru.yandex.practicum.interaction.api.model.event.Location;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -31,7 +30,7 @@ public class EventFullDto {
     private LocalDateTime eventDate;
 
     private long id;
-    private UserShortDto initiator;
+    private Long initiatorId;
     private Location location;
     private boolean paid;
     private int participantLimit;

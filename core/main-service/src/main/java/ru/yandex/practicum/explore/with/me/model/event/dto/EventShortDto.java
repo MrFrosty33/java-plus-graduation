@@ -4,7 +4,7 @@ import com.fasterxml.jackson.annotation.JsonFormat;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import ru.yandex.practicum.explore.with.me.model.category.CategoryDto;
+import ru.yandex.practicum.interaction.api.model.category.dto.CategoryDto;
 import ru.yandex.practicum.interaction.api.model.user.UserShortDto;
 
 import java.time.LocalDateTime;

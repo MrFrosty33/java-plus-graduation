@@ -12,8 +12,8 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
-import ru.yandex.practicum.explore.with.me.model.comment.CommentDto;
 import ru.yandex.practicum.explore.with.me.service.comment.CommentService;
+import ru.yandex.practicum.interaction.api.model.comment.dto.CommentDto;
 
 @RestController
 @RequestMapping("/admin/comments")

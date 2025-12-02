@@ -16,13 +16,13 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
-import ru.yandex.practicum.explore.with.me.model.comment.CommentDto;
 import ru.yandex.practicum.explore.with.me.model.event.EventPublicSort;
 import ru.yandex.practicum.explore.with.me.model.event.PublicEventParam;
 import ru.yandex.practicum.explore.with.me.model.event.dto.EventShortDto;
 import ru.yandex.practicum.explore.with.me.service.comment.CommentService;
 import ru.yandex.practicum.explore.with.me.service.event.EventService;
 import ru.yandex.practicum.explore.with.me.stats.StatsSaver;
+import ru.yandex.practicum.interaction.api.model.comment.dto.CommentDto;
 import ru.yandex.practicum.interaction.api.model.event.dto.EventFullDto;
 
 import java.time.LocalDateTime;

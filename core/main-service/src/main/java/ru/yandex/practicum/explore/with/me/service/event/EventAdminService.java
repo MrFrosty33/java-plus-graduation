@@ -9,13 +9,13 @@ import org.springframework.transaction.annotation.Transactional;
 import ru.yandex.practicum.explore.with.me.mapper.EventMapper;
 import ru.yandex.practicum.explore.with.me.model.event.AdminEventFilter;
 import ru.yandex.practicum.explore.with.me.model.event.Event;
-import ru.yandex.practicum.explore.with.me.model.event.EventState;
 import ru.yandex.practicum.explore.with.me.model.event.EventStatistics;
 import ru.yandex.practicum.explore.with.me.model.event.dto.UpdateEventAdminRequestDto;
 import ru.yandex.practicum.explore.with.me.repository.CategoryRepository;
 import ru.yandex.practicum.explore.with.me.repository.EventRepository;
 import ru.yandex.practicum.interaction.api.exception.ConflictException;
 import ru.yandex.practicum.interaction.api.exception.NotFoundException;
+import ru.yandex.practicum.interaction.api.model.event.EventState;
 import ru.yandex.practicum.interaction.api.model.event.dto.EventFullDto;
 
 import java.time.LocalDateTime;

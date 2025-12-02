@@ -7,7 +7,7 @@ import jakarta.validation.constraints.Size;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import ru.yandex.practicum.explore.with.me.model.event.Location;
+import ru.yandex.practicum.interaction.api.model.event.Location;
 
 import java.time.LocalDateTime;
 
