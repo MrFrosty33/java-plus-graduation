@@ -24,17 +24,15 @@ import ru.yandex.practicum.explore.with.me.model.event.dto.UpdateEventUserAction
 import ru.yandex.practicum.explore.with.me.model.event.dto.UpdateEventUserRequest;
 import ru.yandex.practicum.explore.with.me.repository.CategoryRepository;
 import ru.yandex.practicum.explore.with.me.repository.EventRepository;
-import ru.yandex.practicum.explore.with.me.repository.ParticipationRequestRepository;
 import ru.yandex.practicum.explore.with.me.stats.StatsGetter;
 import ru.yandex.practicum.interaction.api.exception.BadRequestException;
 import ru.yandex.practicum.interaction.api.exception.ConflictException;
 import ru.yandex.practicum.interaction.api.exception.NotFoundException;
+import ru.yandex.practicum.interaction.api.feign.RequestClient;
 import ru.yandex.practicum.interaction.api.feign.UserClient;
-import ru.yandex.practicum.interaction.api.mapper.ParticipationRequestMapper;
 import ru.yandex.practicum.interaction.api.model.event.EventState;
 import ru.yandex.practicum.interaction.api.model.event.dto.EventFullDto;
 import ru.yandex.practicum.interaction.api.model.event.dto.EventRequestCount;
-import ru.yandex.practicum.interaction.api.model.request.ParticipationRequest;
 import ru.yandex.practicum.interaction.api.model.request.ParticipationRequestDto;
 import ru.yandex.practicum.interaction.api.model.request.ParticipationRequestStatus;
 import ru.yandex.practicum.interaction.api.model.user.UserDto;
@@ -61,9 +59,7 @@ public class EventServiceImpl implements ExistenceValidator<Event>, EventService
     private final CategoryRepository categoryRepository;
     private final EventMapper eventMapper;
     private final StatsGetter statsGetter;
-    private final ParticipationRequestRepository requestRepository;
-    //todo Feign, передавать каждый раз userId?
-    private final ParticipationRequestMapper requestMapper;
+    private final RequestClient requestClient;
 
     @Transactional
     @Override
@@ -180,8 +176,9 @@ public class EventServiceImpl implements ExistenceValidator<Event>, EventService
     @Transactional(readOnly = true)
     public List<ParticipationRequestDto> getEventParticipationRequestsByUser(long userId, long eventId) {
         getEventIfInitiatedByUser(userId, eventId);
-        List<ParticipationRequest> requestsByEventId = requestRepository.findAllByEventId(eventId);
-        return requestsByEventId.stream().map(requestMapper::toDto).toList();
+        List<ParticipationRequestDto> result = requestClient.findAllByEventId(eventId);
+        log.info("{}: result of getEventParticipationRequestsByUser(): {}", className, result);
+        return result;
     }
 
     @Override
@@ -189,14 +186,14 @@ public class EventServiceImpl implements ExistenceValidator<Event>, EventService
     public EventRequestStatusUpdateResult updateEventRequestStatus(long userId, long eventId,
                                                                    EventRequestStatusUpdateRequest updateRequest) {
         Event event = getEventIfInitiatedByUser(userId, eventId);
-        List<ParticipationRequest> requestsByEventId = requestRepository.findAllById(updateRequest.getRequestIds());
+        List<ParticipationRequestDto> requestsByEventId = requestClient.findAllById(updateRequest.getRequestIds());
 
         if (event.getParticipantLimit() == 0 || !event.isRequestModeration()) {
             return new EventRequestStatusUpdateResult(
-                    requestsByEventId.stream().map(requestMapper::toDto).toList(), List.of());
+                    requestsByEventId, List.of());
         }
 
-        List<ParticipationRequest> alreadyConfirmed = requestRepository
+        List<ParticipationRequestDto> alreadyConfirmed = requestClient
                 .findAllByEventIdAndStatus(eventId, ParticipationRequestStatus.CONFIRMED);
         AtomicInteger remainingSpots = new AtomicInteger(event.getParticipantLimit() - alreadyConfirmed.size());
 
@@ -218,30 +215,30 @@ public class EventServiceImpl implements ExistenceValidator<Event>, EventService
         requestsByEventId.forEach(request -> {
             if (remainingSpots.get() > 0 && updateRequest.getStatus() == StatusUpdateRequest.CONFIRMED) {
                 request.setStatus(ParticipationRequestStatus.CONFIRMED);
-                confirmedDto.add(requestMapper.toDto(request));
+                confirmedDto.add(request);
                 remainingSpots.getAndDecrement();
             } else {
                 request.setStatus(ParticipationRequestStatus.REJECTED);
-                rejectedDto.add(requestMapper.toDto(request));
+                rejectedDto.add(request);
             }
         });
 
         if (!confirmedDto.isEmpty()) {
-            requestRepository.updateStatus(
+            requestClient.updateStatus(
                     confirmedDto.stream().map(ParticipationRequestDto::getId).toList(),
                     ParticipationRequestStatus.CONFIRMED);
         }
         if (!rejectedDto.isEmpty()) {
-            requestRepository.updateStatus(
+            requestClient.updateStatus(
                     rejectedDto.stream().map(ParticipationRequestDto::getId).toList(),
                     ParticipationRequestStatus.REJECTED);
         }
         if (remainingSpots.get() == 0) {
-            List<Long> pendingIds = requestRepository
+            List<Long> pendingIds = requestClient
                     .findAllByEventIdAndStatus(eventId, ParticipationRequestStatus.PENDING)
-                    .stream().map(ParticipationRequest::getId).toList();
+                    .stream().map(ParticipationRequestDto::getId).toList();
             if (!pendingIds.isEmpty()) {
-                requestRepository.updateStatus(pendingIds, ParticipationRequestStatus.REJECTED);
+                requestClient.updateStatus(pendingIds, ParticipationRequestStatus.REJECTED);
             }
         }
         return new EventRequestStatusUpdateResult(confirmedDto, rejectedDto);
@@ -326,7 +323,7 @@ public class EventServiceImpl implements ExistenceValidator<Event>, EventService
 
     @Override
     public Map<Long, Integer> getConfirmedRequests(List<Long> eventIds) {
-        List<EventRequestCount> confirmedRequests = requestRepository.countGroupByEventId(eventIds);
+        List<EventRequestCount> confirmedRequests = requestClient.countGroupByEventId(eventIds);
         Map<Long, Integer> result = confirmedRequests.stream().collect(
                 Collectors.toMap(
                         EventRequestCount::eventId,
