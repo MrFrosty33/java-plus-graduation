@@ -20,7 +20,7 @@ import ru.yandex.practicum.interaction.api.exception.BadRequestException;
 import ru.yandex.practicum.interaction.api.exception.ConflictException;
 import ru.yandex.practicum.interaction.api.exception.ForbiddenException;
 import ru.yandex.practicum.interaction.api.exception.NotFoundException;
-import ru.yandex.practicum.interaction.api.feign.UserAdminFeignClient;
+import ru.yandex.practicum.interaction.api.feign.UserClient;
 import ru.yandex.practicum.interaction.api.model.request.ParticipationRequestStatus;
 import ru.yandex.practicum.interaction.api.model.user.UserDto;
 import ru.yandex.practicum.interaction.api.util.ExistenceValidator;
@@ -40,7 +40,7 @@ public class CommentServiceImpl implements CommentService, ExistenceValidator<Co
 
     private final CommentRepository commentRepository;
 
-    private final UserAdminFeignClient userAdminFeignClient;
+    private final UserClient userClient;
     private final EventRepository eventRepository;
     private final ParticipationRequestRepository requestRepository;
     private final ExistenceValidator<Event> eventExistenceValidator;
@@ -70,7 +70,7 @@ public class CommentServiceImpl implements CommentService, ExistenceValidator<Co
     public CommentDto createComment(Long userId, Long eventId, CreateUpdateCommentDto dto) {
         validateText(dto.getText(), 100);
 
-        UserDto author = userAdminFeignClient.findById(userId)
+        UserDto author = userClient.findById(userId)
                 .orElseThrow(() -> {
                     log.info("{}: attempt to find user with id: {}", className, userId);
                             return new NotFoundException(
@@ -197,7 +197,7 @@ public class CommentServiceImpl implements CommentService, ExistenceValidator<Co
 
     private CommentDto mapToCommentDto(Comment comment) {
         CommentDto result = mapper.toDto(comment);
-        UserDto userDto = userAdminFeignClient.findById(comment.getAuthorId()).orElseThrow(() -> {
+        UserDto userDto = userClient.findById(comment.getAuthorId()).orElseThrow(() -> {
                     log.info("{}: user with id: {} was not found", className, comment.getAuthorId());
                     return new NotFoundException(
                             OBJECT_NOT_FOUND,
@@ -213,7 +213,7 @@ public class CommentServiceImpl implements CommentService, ExistenceValidator<Co
 
     private CommentUpdateDto mapToCommentUpdateDto(Comment comment) {
         CommentUpdateDto result = mapper.toUpdateDto(comment);
-        UserDto userDto = userAdminFeignClient.findById(comment.getAuthorId()).orElseThrow(() -> {
+        UserDto userDto = userClient.findById(comment.getAuthorId()).orElseThrow(() -> {
                     log.info("{}: user with id: {} was not found", className, comment.getAuthorId());
                     return new NotFoundException(
                             OBJECT_NOT_FOUND,
@@ -237,7 +237,7 @@ public class CommentServiceImpl implements CommentService, ExistenceValidator<Co
     }
 
     private void validateUserExists(Long userId) {
-        userAdminFeignClient.findById(userId)
+        userClient.findById(userId)
                 .orElseThrow(() -> {
                             log.info("{}: attempt to find user with id: {}", className, userId);
                             return new NotFoundException(

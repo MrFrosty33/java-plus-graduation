@@ -7,7 +7,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import ru.yandex.practicum.interaction.api.exception.ConflictException;
 import ru.yandex.practicum.interaction.api.exception.NotFoundException;
-import ru.yandex.practicum.interaction.api.feign.UserAdminFeignClient;
+import ru.yandex.practicum.interaction.api.feign.UserClient;
 import ru.yandex.practicum.interaction.api.mapper.ParticipationRequestMapper;
 import ru.yandex.practicum.interaction.api.model.request.CancelParticipationRequest;
 import ru.yandex.practicum.interaction.api.model.request.NewParticipationRequest;
@@ -32,7 +32,7 @@ public class ParticipationRequestServiceImpl implements ParticipationRequestServ
     private static final String OBJECT_NOT_FOUND = "Required object was not found.";
 
     private final ParticipationRequestRepository participationRequestRepository;
-    private final UserAdminFeignClient userAdminFeignClient;
+    private final UserClient userClient;
     private final EventRepository eventRepository;
     //todo Feign
     private final ExistenceValidator<Event> eventExistenceValidator;
@@ -170,7 +170,7 @@ public class ParticipationRequestServiceImpl implements ParticipationRequestServ
     }
 
     private void validateUserExists(Long userId) {
-        userAdminFeignClient.findById(userId)
+        userClient.findById(userId)
                 .orElseThrow(() -> {
                             log.info("{}: attempt to find user with id: {}", className, userId);
                             return new NotFoundException(

@@ -1,13 +1,13 @@
 package ru.yandex.practicum.interaction.api.feign.fallback;
 
-import ru.yandex.practicum.interaction.api.feign.RequestInternalFeignClient;
+import ru.yandex.practicum.interaction.api.feign.RequestClient;
 import ru.yandex.practicum.interaction.api.model.event.dto.EventRequestCount;
 import ru.yandex.practicum.interaction.api.model.request.ParticipationRequestDto;
 import ru.yandex.practicum.interaction.api.model.request.ParticipationRequestStatus;
 
 import java.util.List;
 
-public class RequestInternalFallback implements RequestInternalFeignClient {
+public class RequestFallback implements RequestClient {
 
     @Override
     public List<ParticipationRequestDto> findAllById(List<Long> requestIds) {
@@ -32,5 +32,10 @@ public class RequestInternalFallback implements RequestInternalFeignClient {
     @Override
     public List<EventRequestCount> countGroupByEventId(List<Long> eventIds) {
         return List.of();
+    }
+
+    @Override
+    public boolean existsByRequesterIdAndEventIdAndStatus(Long requesterId, Long eventId, ParticipationRequestStatus status) {
+        return false;
     }
 }

@@ -1,4 +1,4 @@
-package ru.yandex.practicum.explore.with.me.model.event.dto;
+package ru.yandex.practicum.interaction.api.model.event.dto;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
 import lombok.AllArgsConstructor;

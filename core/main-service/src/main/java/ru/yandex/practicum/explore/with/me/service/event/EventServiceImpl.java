@@ -15,7 +15,6 @@ import ru.yandex.practicum.explore.with.me.model.event.EventPublicSort;
 import ru.yandex.practicum.explore.with.me.model.event.EventState;
 import ru.yandex.practicum.explore.with.me.model.event.EventStatistics;
 import ru.yandex.practicum.explore.with.me.model.event.PublicEventParam;
-import ru.yandex.practicum.explore.with.me.model.event.dto.EventFullDto;
 import ru.yandex.practicum.explore.with.me.model.event.dto.EventRequestStatusUpdateRequest;
 import ru.yandex.practicum.explore.with.me.model.event.dto.EventRequestStatusUpdateResult;
 import ru.yandex.practicum.explore.with.me.model.event.dto.EventShortDto;
@@ -31,8 +30,9 @@ import ru.yandex.practicum.explore.with.me.stats.StatsGetter;
 import ru.yandex.practicum.interaction.api.exception.BadRequestException;
 import ru.yandex.practicum.interaction.api.exception.ConflictException;
 import ru.yandex.practicum.interaction.api.exception.NotFoundException;
-import ru.yandex.practicum.interaction.api.feign.UserAdminFeignClient;
+import ru.yandex.practicum.interaction.api.feign.UserClient;
 import ru.yandex.practicum.interaction.api.mapper.ParticipationRequestMapper;
+import ru.yandex.practicum.interaction.api.model.event.dto.EventFullDto;
 import ru.yandex.practicum.interaction.api.model.event.dto.EventRequestCount;
 import ru.yandex.practicum.interaction.api.model.request.ParticipationRequest;
 import ru.yandex.practicum.interaction.api.model.request.ParticipationRequestDto;
@@ -57,7 +57,7 @@ public class EventServiceImpl implements ExistenceValidator<Event>, EventService
     private final String className = this.getClass().getSimpleName();
 
     private final EventRepository eventRepository;
-    private final UserAdminFeignClient userAdminFeignClient;
+    private final UserClient userClient;
     private final CategoryRepository categoryRepository;
     private final EventMapper eventMapper;
     private final StatsGetter statsGetter;
@@ -352,7 +352,7 @@ public class EventServiceImpl implements ExistenceValidator<Event>, EventService
     }
 
     private UserDto findUserByIdOrElseThrow(long userId) {
-        return userAdminFeignClient.findById(userId).orElseThrow(() -> {
+        return userClient.findById(userId).orElseThrow(() -> {
             log.info("{}: user with id: {} was not found", className, userId);
             return new NotFoundException("The required object was not found.", "User with id=" + userId + " was not found");
         });

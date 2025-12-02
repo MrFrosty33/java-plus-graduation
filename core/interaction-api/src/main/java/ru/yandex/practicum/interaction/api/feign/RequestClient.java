@@ -13,8 +13,8 @@ import ru.yandex.practicum.interaction.api.model.request.ParticipationRequestSta
 
 import java.util.List;
 
-@FeignClient(name = "request-service", fallback = RequestInternalFeignClient.class)
-public interface RequestInternalFeignClient {
+@FeignClient(name = "request-service", fallback = RequestClient.class)
+public interface RequestClient {
     @GetMapping(path = "/internal/requests", params = "requestIds")
     List<ParticipationRequestDto> findAllById(@RequestParam
                                               @NotNull

@@ -12,7 +12,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
-import ru.yandex.practicum.interaction.api.feign.RequestInternalFeignClient;
+import ru.yandex.practicum.interaction.api.feign.RequestClient;
 import ru.yandex.practicum.interaction.api.model.event.dto.EventRequestCount;
 import ru.yandex.practicum.interaction.api.model.request.ParticipationRequestDto;
 import ru.yandex.practicum.interaction.api.model.request.ParticipationRequestStatus;
@@ -25,7 +25,7 @@ import java.util.List;
 @RequiredArgsConstructor(onConstructor_ = @Autowired)
 @Slf4j
 @Validated
-public class ParticipationRequestInternalController implements RequestInternalFeignClient {
+public class ParticipationRequestInternalController implements RequestClient {
     private final ParticipationRequestService service;
     private final String controllerName = this.getClass().getSimpleName();
 

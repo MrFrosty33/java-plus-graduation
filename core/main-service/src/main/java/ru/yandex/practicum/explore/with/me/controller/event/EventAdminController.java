@@ -17,9 +17,9 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import ru.yandex.practicum.explore.with.me.model.event.AdminEventFilter;
 import ru.yandex.practicum.explore.with.me.model.event.dto.AdminEventSearchRequestDto;
-import ru.yandex.practicum.explore.with.me.model.event.dto.EventFullDto;
 import ru.yandex.practicum.explore.with.me.model.event.dto.UpdateEventAdminRequestDto;
 import ru.yandex.practicum.explore.with.me.service.event.EventAdminService;
+import ru.yandex.practicum.interaction.api.model.event.dto.EventFullDto;
 
 import java.util.List;
 
