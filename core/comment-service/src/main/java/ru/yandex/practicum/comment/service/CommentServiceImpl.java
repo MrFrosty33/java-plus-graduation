@@ -1,5 +1,6 @@
 package ru.yandex.practicum.comment.service;
 
+import feign.FeignException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Pageable;
@@ -11,6 +12,7 @@ import ru.yandex.practicum.interaction.api.exception.BadRequestException;
 import ru.yandex.practicum.interaction.api.exception.ConflictException;
 import ru.yandex.practicum.interaction.api.exception.ForbiddenException;
 import ru.yandex.practicum.interaction.api.exception.NotFoundException;
+import ru.yandex.practicum.interaction.api.feign.EventClient;
 import ru.yandex.practicum.interaction.api.feign.RequestClient;
 import ru.yandex.practicum.interaction.api.feign.UserClient;
 import ru.yandex.practicum.interaction.api.mapper.CommentMapper;
@@ -19,6 +21,7 @@ import ru.yandex.practicum.interaction.api.model.comment.dto.CommentDto;
 import ru.yandex.practicum.interaction.api.model.comment.dto.CommentUpdateDto;
 import ru.yandex.practicum.interaction.api.model.comment.dto.CommentUserDto;
 import ru.yandex.practicum.interaction.api.model.comment.dto.CreateUpdateCommentDto;
+import ru.yandex.practicum.interaction.api.model.event.dto.EventFullDto;
 import ru.yandex.practicum.interaction.api.model.request.ParticipationRequestStatus;
 import ru.yandex.practicum.interaction.api.model.user.UserDto;
 import ru.yandex.practicum.interaction.api.util.ExistenceValidator;
@@ -39,11 +42,10 @@ public class CommentServiceImpl implements CommentService, ExistenceValidator<Co
     private final CommentRepository commentRepository;
 
     private final UserClient userClient;
-    private final EventRepository eventRepository;
-    //todo Feign
+    private final EventClient eventClient;
     private final RequestClient requestClient;
-    private final ExistenceValidator<Event> eventExistenceValidator;
     private final CommentMapper mapper;
+    //todo подумать, как в дтошки пихать event
 
 
     // admin
@@ -78,14 +80,8 @@ public class CommentServiceImpl implements CommentService, ExistenceValidator<Co
                         }
                 );
 
-        Event event = eventRepository.findById(eventId)
-                .orElseThrow(() -> {
-                    log.info("{}: attempt to find event with id: {}", className, eventId);
-                            return new NotFoundException(
-                                    OBJECT_NOT_FOUND,
-                                    String.format("Event with id: %d was not found", eventId));
-                        }
-                );
+        validateEventExists(eventId);
+        EventFullDto event = eventClient.getEventById(eventId);
 
         if (event.getEventDate().isBefore(LocalDateTime.now())) {
             log.info("CommentServiceImpl: attempt to comment event, which has not been happened yet");
@@ -105,7 +101,7 @@ public class CommentServiceImpl implements CommentService, ExistenceValidator<Co
 
         Comment comment = mapper.toModel(dto);
         comment.setAuthorId(author.getId());
-        comment.setEvent(event);
+        comment.setEventId(event.getId());
 
         CommentDto result = mapToCommentDto(commentRepository.save(comment));
         log.info("{}: result of createComment(): {}", className, result);
@@ -166,7 +162,7 @@ public class CommentServiceImpl implements CommentService, ExistenceValidator<Co
     @Override
     @Transactional(readOnly = true)
     public List<CommentDto> getCommentsByEvent(Long eventId, Pageable pageable) {
-        eventExistenceValidator.validateExists(eventId);
+        validateEventExists(eventId);
         List<CommentDto> result = commentRepository.findByEventIdOrderByCreatedOnDesc(eventId, pageable)
                 .stream()
                 .map(this::mapToCommentDto)
@@ -244,5 +240,16 @@ public class CommentServiceImpl implements CommentService, ExistenceValidator<Co
                                     String.format("User with id: %d was not found", userId));
                         }
                 );
+    }
+
+    private void validateEventExists(Long eventId) {
+        try {
+            eventClient.getEventById(eventId);
+        } catch (FeignException.NotFound e) {
+            log.info("{}: attempt to find event with id: {}", className, eventId);
+            throw new NotFoundException(
+                    OBJECT_NOT_FOUND,
+                    String.format("Event with id: %d was not found", eventId));
+        }
     }
 }

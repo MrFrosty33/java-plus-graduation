@@ -20,6 +20,13 @@ spring:
           filters:
             - CircuitBreaker=requestServiceCircuitBreaker
 
+        - id: comment_service_route
+          uri: lb://comment-service
+          predicates:
+            - Path=/events/*/comments/**,/admin/comments/**,/users/*/comments/**
+          filters:
+            - CircuitBreaker=commentServiceCircuitBreaker
+
         - id: event_service_route
           uri: lb://event-service
           predicates:
