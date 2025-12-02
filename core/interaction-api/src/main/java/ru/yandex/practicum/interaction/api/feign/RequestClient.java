@@ -7,13 +7,14 @@ import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestParam;
+import ru.yandex.practicum.interaction.api.feign.fallback.RequestFallback;
 import ru.yandex.practicum.interaction.api.model.event.dto.EventRequestCount;
 import ru.yandex.practicum.interaction.api.model.request.ParticipationRequestDto;
 import ru.yandex.practicum.interaction.api.model.request.ParticipationRequestStatus;
 
 import java.util.List;
 
-@FeignClient(name = "request-service", fallback = RequestClient.class)
+@FeignClient(name = "request-service", fallback = RequestFallback.class)
 public interface RequestClient {
     @GetMapping(path = "/internal/requests", params = "requestIds")
     List<ParticipationRequestDto> findAllById(@RequestParam
