@@ -7,10 +7,8 @@ import org.springframework.web.bind.annotation.RequestParam;
 import ru.yandex.practicum.interaction.api.feign.fallback.UserFallback;
 import ru.yandex.practicum.interaction.api.model.user.UserDto;
 
-import java.util.Optional;
-
 @FeignClient(name = "user-service", fallback = UserFallback.class)
 public interface UserClient {
     @GetMapping("/internal/users")
-    Optional<UserDto> findById(@RequestParam @Positive Long id);
+    UserDto findById(@RequestParam @Positive Long id);
 }

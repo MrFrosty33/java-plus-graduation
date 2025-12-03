@@ -13,8 +13,6 @@ import ru.yandex.practicum.interaction.api.feign.UserClient;
 import ru.yandex.practicum.interaction.api.model.user.UserDto;
 import ru.yandex.practicum.user.service.UserService;
 
-import java.util.Optional;
-
 @RestController
 @RequestMapping("/internal/users")
 @RequiredArgsConstructor(onConstructor_ = @Autowired)
@@ -25,9 +23,9 @@ public class UserInternalController implements UserClient {
     private final String controllerName = this.getClass().getSimpleName();
 
     @GetMapping
-    public Optional<UserDto> findById(@RequestParam
-                                          @Positive
-                                      Long id) {
+    public UserDto findById(@RequestParam
+                            @Positive
+                            Long id) {
         log.trace("{}: findById() call with id: {}", controllerName, id);
         return service.findById(id);
     }

@@ -232,14 +232,7 @@ public class ParticipationRequestServiceImpl implements ParticipationRequestServ
 
 
     private void validateUserExists(Long userId) {
-        userClient.findById(userId)
-                .orElseThrow(() -> {
-                            log.info("{}: attempt to find user with id: {}", className, userId);
-                            return new NotFoundException(
-                                    OBJECT_NOT_FOUND,
-                                    String.format("User with id: %d was not found", userId));
-                        }
-                );
+        userClient.findById(userId);
     }
 
     @Override

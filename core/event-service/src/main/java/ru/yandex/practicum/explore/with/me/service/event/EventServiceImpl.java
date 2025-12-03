@@ -67,7 +67,7 @@ public class EventServiceImpl implements ExistenceValidator<Event>, EventService
     @Transactional
     @Override
     public EventFullDto createEvent(long userId, NewEventDto eventDto) {
-        UserDto user = findUserByIdOrElseThrow(userId);
+        UserDto user = userClient.findById(userId);
 
         long categoryId = eventDto.getCategory();
         Category category = findCategoryByIdOrElseThrow(categoryId);
@@ -168,7 +168,7 @@ public class EventServiceImpl implements ExistenceValidator<Event>, EventService
     @Override
     @Transactional(readOnly = true)
     public List<EventShortDto> getEventsByUser(long userId, int from, int count) {
-        UserDto user = findUserByIdOrElseThrow(userId);
+        UserDto user = userClient.findById(userId);
         Pageable pageable = PageRequest.of(from, count, Sort.by("createdOn").ascending());
         List<Event> events = eventRepository.findEventsByUser(user.getId(), pageable).getContent();
         if (events.isEmpty()) {
@@ -297,7 +297,6 @@ public class EventServiceImpl implements ExistenceValidator<Event>, EventService
     }
 
 
-
     @Override
     @Transactional(readOnly = true)
     public List<EventShortDto> getPublicEvents(PublicEventParam params) {
@@ -372,9 +371,12 @@ public class EventServiceImpl implements ExistenceValidator<Event>, EventService
     }
 
     private Event getEventIfInitiatedByUser(long userId, long eventId) {
-        findUserByIdOrElseThrow(userId);
-        Event event = eventRepository.findById(eventId).orElseThrow(() ->
-                new NotFoundException("The required object was not found.", "Event with id=" + eventId + " was not found"));
+        // проверка, что такой пользователь вообще существует
+        userClient.findById(userId);
+        Event event = eventRepository.findById(eventId).orElseThrow(() -> {
+            log.info("{}: event with id: {} not found", className, eventId);
+            return new NotFoundException("The required object was not found.", "Event with id=" + eventId + " was not found");
+        });
 
         if (event.getInitiator() != userId) {
             log.info("User {} cannot manipulate with the event with id {}", userId, eventId);
@@ -383,13 +385,6 @@ public class EventServiceImpl implements ExistenceValidator<Event>, EventService
         }
         log.info("{}: result of getEventIfInitiatedByUser(): {}", className, event);
         return event;
-    }
-
-    private UserDto findUserByIdOrElseThrow(long userId) {
-        return userClient.findById(userId).orElseThrow(() -> {
-            log.info("{}: user with id: {} was not found", className, userId);
-            return new NotFoundException("The required object was not found.", "User with id=" + userId + " was not found");
-        });
     }
 
     private Category findCategoryByIdOrElseThrow(long categoryId) {

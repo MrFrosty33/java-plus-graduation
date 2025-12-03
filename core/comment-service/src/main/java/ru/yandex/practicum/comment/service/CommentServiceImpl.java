@@ -71,14 +71,7 @@ public class CommentServiceImpl implements CommentService, ExistenceValidator<Co
     public CommentDto createComment(Long userId, Long eventId, CreateUpdateCommentDto dto) {
         validateText(dto.getText(), 100);
 
-        UserDto author = userClient.findById(userId)
-                .orElseThrow(() -> {
-                    log.info("{}: attempt to find user with id: {}", className, userId);
-                            return new NotFoundException(
-                                    OBJECT_NOT_FOUND,
-                                    String.format("User with id: %d was not found", userId));
-                        }
-                );
+        UserDto author = userClient.findById(userId);
 
         validateEventExists(eventId);
         EventFullDto event = eventClient.getEventById(eventId);
@@ -192,13 +185,7 @@ public class CommentServiceImpl implements CommentService, ExistenceValidator<Co
 
     private CommentDto mapToCommentDto(Comment comment) {
         CommentDto result = mapper.toDto(comment);
-        UserDto userDto = userClient.findById(comment.getAuthorId()).orElseThrow(() -> {
-                    log.info("{}: user with id: {} was not found", className, comment.getAuthorId());
-                    return new NotFoundException(
-                            OBJECT_NOT_FOUND,
-                            String.format("User with id: %d was not found", comment.getAuthorId()));
-                }
-        );
+        UserDto userDto = userClient.findById(comment.getAuthorId());
 
         CommentDto.CommentAuthorDto authorDto = new CommentDto.CommentAuthorDto(userDto.getId(), userDto.getName());
         result.setAuthorDto(authorDto);
@@ -208,13 +195,7 @@ public class CommentServiceImpl implements CommentService, ExistenceValidator<Co
 
     private CommentUpdateDto mapToCommentUpdateDto(Comment comment) {
         CommentUpdateDto result = mapper.toUpdateDto(comment);
-        UserDto userDto = userClient.findById(comment.getAuthorId()).orElseThrow(() -> {
-                    log.info("{}: user with id: {} was not found", className, comment.getAuthorId());
-                    return new NotFoundException(
-                            OBJECT_NOT_FOUND,
-                            String.format("User with id: %d was not found", comment.getAuthorId()));
-                }
-        );
+        UserDto userDto = userClient.findById(comment.getAuthorId());
 
         CommentUpdateDto.CommentAuthorDto authorDto = new CommentUpdateDto.CommentAuthorDto(userDto.getId(), userDto.getName());
         result.setAuthorDto(authorDto);
@@ -232,14 +213,7 @@ public class CommentServiceImpl implements CommentService, ExistenceValidator<Co
     }
 
     private void validateUserExists(Long userId) {
-        userClient.findById(userId)
-                .orElseThrow(() -> {
-                            log.info("{}: attempt to find user with id: {}", className, userId);
-                            return new NotFoundException(
-                                    OBJECT_NOT_FOUND,
-                                    String.format("User with id: %d was not found", userId));
-                        }
-                );
+        userClient.findById(userId);
     }
 
     private void validateEventExists(Long eventId) {

@@ -7,6 +7,7 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import ru.yandex.practicum.interaction.api.exception.ConflictException;
+import ru.yandex.practicum.interaction.api.exception.NotFoundException;
 import ru.yandex.practicum.interaction.api.mapper.UserMapper;
 import ru.yandex.practicum.interaction.api.model.user.AdminUserFindParam;
 import ru.yandex.practicum.interaction.api.model.user.NewUserRequest;
@@ -17,7 +18,6 @@ import ru.yandex.practicum.interaction.api.util.DataProvider;
 import ru.yandex.practicum.user.repository.UserRepository;
 
 import java.util.List;
-import java.util.Optional;
 
 @Service
 @Slf4j
@@ -47,13 +47,13 @@ public class UserServiceImpl implements UserService, DataProvider<UserShortDto, 
     }
 
     @Override
-    public Optional<UserDto> findById(Long id) {
-        Optional<User> user = userRepository.findById(id);
-        Optional<UserDto> result = Optional.empty();
-
-        if (user.isPresent()) {
-            result = Optional.of(userMapper.toDto(user.get()));
-        }
+    public UserDto findById(Long id) {
+        UserDto result = userMapper.toDto(userRepository.findById(id).orElseThrow(() -> {
+            log.info("{}: user with id: {} not found", className, id);
+            return new NotFoundException(
+                    "Required object was not found.",
+                    String.format("User with id: %d was not found", id));
+        }));
 
         log.info("{}: result of findById: {}", className, result);
         return result;
