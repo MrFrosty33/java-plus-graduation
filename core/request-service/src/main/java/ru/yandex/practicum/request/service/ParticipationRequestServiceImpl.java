@@ -11,6 +11,7 @@ import ru.yandex.practicum.interaction.api.exception.NotFoundException;
 import ru.yandex.practicum.interaction.api.feign.EventClient;
 import ru.yandex.practicum.interaction.api.feign.UserClient;
 import ru.yandex.practicum.interaction.api.mapper.ParticipationRequestMapper;
+import ru.yandex.practicum.interaction.api.model.event.EventState;
 import ru.yandex.practicum.interaction.api.model.event.dto.EventFullDto;
 import ru.yandex.practicum.interaction.api.model.event.dto.EventRequestCount;
 import ru.yandex.practicum.interaction.api.model.request.CancelParticipationRequest;
@@ -112,6 +113,11 @@ public class ParticipationRequestServiceImpl implements ParticipationRequestServ
         validateUserExists(requesterId);
 
         EventFullDto event = eventClient.getEventById(eventId);
+        if (!event.getState().equals(EventState.PUBLISHED)) {
+            log.info("{}: attempt to an unpublished event, state: {}", className, event.getState());
+            throw new ConflictException("Can't create participation request to an unpublished event",
+                    "status: " + event.getState());
+        }
 
         if (event.getInitiator().equals(requesterId)) {
             log.info("{}: attempt to create participationRequest by an event initiator with requesterId: {}, eventId: {}, " +
