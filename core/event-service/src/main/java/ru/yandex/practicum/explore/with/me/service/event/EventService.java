@@ -26,6 +26,8 @@ public interface EventService {
 
     EventFullDto getPublicEventById(long eventId);
 
+    EventFullDto getInternalEventById(long eventId);
+
     List<EventShortDto> getEventsByUser(long userId, int from, int count);
 
     Map<Long, Long> getEventViews(EventViewsParameters params);

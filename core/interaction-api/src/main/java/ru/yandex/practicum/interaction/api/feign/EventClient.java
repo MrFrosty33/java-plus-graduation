@@ -12,6 +12,6 @@ import ru.yandex.practicum.interaction.api.model.event.dto.EventFullDto;
 public interface EventClient {
 
     // EventPublicController не может его имплементировать, т.к. принимает ещё и HttpServletRequest, который в фейне я не могу передать
-    @GetMapping("/events/{eventId}")
+    @GetMapping("/internal/events/{eventId}")
     EventFullDto getEventById(@PathVariable @PositiveOrZero @NotNull Long eventId);
 }

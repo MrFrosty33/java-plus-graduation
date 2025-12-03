@@ -256,8 +256,30 @@ public class EventServiceImpl implements ExistenceValidator<Event>, EventService
         return new EventRequestStatusUpdateResult(confirmedDto, rejectedDto);
     }
 
+
+    @Override
     @Transactional(readOnly = true)
     public EventFullDto getPublicEventById(long eventId) {
+        //todo заполнять ещё и комментарии?
+        Event event = eventRepository.findByIdAndState(eventId, EventState.PUBLISHED)
+                .orElseThrow(() -> {
+                    log.info("{}: attempt to find event with id: {} and state: {}", className, eventId, EventState.PUBLISHED);
+                    return new NotFoundException("The required object was not found.",
+                            "Event with id=" + eventId + " and state=" + EventState.PUBLISHED + " was not found");
+                });
+        List<Event> events = List.of(event);
+        LocalDateTime startStats = event.getCreatedOn().truncatedTo(ChronoUnit.SECONDS);
+        LocalDateTime endStats = LocalDateTime.now().truncatedTo(ChronoUnit.SECONDS);
+        EventStatistics stats = getEventStatistics(events, startStats, endStats);
+        EventFullDto result = eventMapper.toFullDtoWithStats(event, stats);
+        log.info("{}: result of getPublicEventById(): {}", className, result);
+        return result;
+    }
+
+
+    @Override
+    @Transactional(readOnly = true)
+    public EventFullDto getInternalEventById(long eventId) {
         //todo заполнять ещё и комментарии?
         Event event = eventRepository.findById(eventId)
                 .orElseThrow(() -> {
@@ -270,9 +292,11 @@ public class EventServiceImpl implements ExistenceValidator<Event>, EventService
         LocalDateTime endStats = LocalDateTime.now().truncatedTo(ChronoUnit.SECONDS);
         EventStatistics stats = getEventStatistics(events, startStats, endStats);
         EventFullDto result = eventMapper.toFullDtoWithStats(event, stats);
-        log.info("{}: result of getPublicEventById(): {}", className, result);
+        log.info("{}: result of getInternalEventById(): {}", className, result);
         return result;
     }
+
+
 
     @Override
     @Transactional(readOnly = true)
