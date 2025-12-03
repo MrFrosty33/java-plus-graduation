@@ -26,7 +26,7 @@ public class UserInternalController implements UserClient {
 
     @GetMapping
     public Optional<UserDto> findById(@RequestParam
-                                      @Positive(message = "must be positive")
+                                          @Positive
                                       Long id) {
         log.trace("{}: findById() call with id: {}", controllerName, id);
         return service.findById(id);
