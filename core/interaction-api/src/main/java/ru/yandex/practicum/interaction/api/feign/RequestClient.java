@@ -34,7 +34,7 @@ public interface RequestClient {
                       @NotNull
                       @NotEmpty
                       List<Long> requestIds,
-                      ParticipationRequestStatus status);
+                      @RequestParam ParticipationRequestStatus status);
 
     @GetMapping("/internal/requests/count")
     List<EventRequestCount> countGroupByEventId(@RequestParam

@@ -56,7 +56,8 @@ public class ParticipationRequestInternalController implements RequestClient {
                              @NotNull
                              @NotEmpty
                              List<Long> requestIds,
-                             ParticipationRequestStatus status) {
+                             @RequestParam ParticipationRequestStatus status) {
+        //todo почему-то status поступает null
         log.trace("{}: updateStatus() call with requestIds: {} and status: {}", controllerName, requestIds, status);
         service.updateStatus(requestIds, status);
     }
