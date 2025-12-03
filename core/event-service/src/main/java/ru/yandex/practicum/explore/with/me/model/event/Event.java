@@ -64,7 +64,7 @@ public class Event {
     private String title;
 
     @Column(name = "initiator_id")
-    private Long initiatorId;
+    private Long initiator;
 
     @Convert(converter = EventStateConverter.class)
     private EventState state;

@@ -5,7 +5,6 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import ru.yandex.practicum.interaction.api.model.category.dto.CategoryDto;
-import ru.yandex.practicum.interaction.api.model.user.UserShortDto;
 
 import java.time.LocalDateTime;
 
@@ -22,7 +21,7 @@ public class EventShortDto {
     private LocalDateTime eventDate;
 
     private long id;
-    private UserShortDto initiator;
+    private Long initiator;
     private boolean paid;
     private String title;
     private Long views;

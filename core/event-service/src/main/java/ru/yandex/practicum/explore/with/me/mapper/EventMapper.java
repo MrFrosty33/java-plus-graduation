@@ -28,7 +28,7 @@ public interface EventMapper {
     @Mapping(target = "createdOn", expression = "java(java.time.LocalDateTime.now())")
     @Mapping(target = "publishedOn", ignore = true)
     @Mapping(target = "state", ignore = true)
-    @Mapping(target = "initiatorId", ignore = true)
+    @Mapping(target = "initiator", ignore = true)
     @Mapping(target = "category", ignore = true)
     Event toModel(NewEventDto eventDto);
 

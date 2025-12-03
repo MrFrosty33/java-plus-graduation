@@ -15,7 +15,7 @@ import java.util.Optional;
 public interface EventRepository extends JpaRepository<Event, Long> {
     @Query("""
             SELECT DISTINCT e FROM Event e
-            WHERE e.initiatorId = :userId
+            WHERE e.initiator = :userId
             """)
     Page<Event> findEventsByUser(@Param("userId") Long userId,
                                  Pageable pageable);
@@ -47,7 +47,7 @@ public interface EventRepository extends JpaRepository<Event, Long> {
     @Query("""
              SELECT e
              FROM Event e
-             WHERE (:users      IS NULL OR e.initiatorId IN :users)
+             WHERE (:users      IS NULL OR e.initiator IN :users)
                AND (:states     IS NULL OR e.state IN :states)
                AND (:categories IS NULL OR e.category.id IN :categories)
                AND (e.eventDate >= COALESCE(:rangeStart, e.eventDate))

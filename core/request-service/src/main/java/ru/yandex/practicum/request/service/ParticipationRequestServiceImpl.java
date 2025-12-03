@@ -113,11 +113,11 @@ public class ParticipationRequestServiceImpl implements ParticipationRequestServ
 
         EventFullDto event = eventClient.getEventById(eventId);
 
-        if (event.getInitiatorId().equals(requesterId)) {
+        if (event.getInitiator().equals(requesterId)) {
             log.info("{}: attempt to create participationRequest by an event initiator with requesterId: {}, eventId: {}, " +
-                    "initiatorId: {}", className, requesterId, eventId, event.getInitiatorId());
+                    "initiatorId: {}", className, requesterId, eventId, event.getInitiator());
             throw new ConflictException("Initiator can't create participation request.", "requesterId: "
-                    + requesterId + " equals to initiatorId: " + event.getInitiatorId());
+                    + requesterId + " equals to initiatorId: " + event.getInitiator());
         }
 
         if (event.getPublishedOn() == null) {

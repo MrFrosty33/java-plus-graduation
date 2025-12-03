@@ -30,7 +30,7 @@ public class EventFullDto {
     private LocalDateTime eventDate;
 
     private long id;
-    private Long initiatorId;
+    private Long initiator;
     private Location location;
     private boolean paid;
     private int participantLimit;
