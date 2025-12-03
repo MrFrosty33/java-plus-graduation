@@ -24,7 +24,6 @@ public class UserInternalController implements UserClient {
     private final UserService service;
     private final String controllerName = this.getClass().getSimpleName();
 
-    //todo этот метод вынести в отдельный контроллер
     @GetMapping
     public Optional<UserDto> findById(@RequestParam
                                       @Positive(message = "must be positive")

@@ -43,7 +43,7 @@ public class ParticipationRequestServiceImpl implements ParticipationRequestServ
 
     @Override
     public List<ParticipationRequestDto> find(Long userId) {
-        validateExists(userId);
+        validateUserExists(userId);
 
         List<ParticipationRequestDto> result = participationRequestRepository.findAllByRequesterId(userId).stream()
                 .map(this::getDto)
