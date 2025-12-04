@@ -6,16 +6,34 @@ spring:
           enabled: false
           lower-case-service-id: true
       routes:
-        - id: main_service_route
-          uri: lb://main-service
+        - id: user_service_route
+          uri: lb://user-service
+          predicates:
+            - Path=/admin/users/**
+          filters:
+            - CircuitBreaker=userServiceCircuitBreaker
+
+        - id: request_service_route
+          uri: lb://request-service
+          predicates:
+            - Path=/users/*/requests/**
+          filters:
+            - CircuitBreaker=requestServiceCircuitBreaker
+
+        - id: comment_service_route
+          uri: lb://comment-service
+          predicates:
+            - Path=/admin/comments/**,/users/*/comments/**
+          filters:
+            - CircuitBreaker=commentServiceCircuitBreaker
+
+        - id: event_service_route
+          uri: lb://event-service
           predicates:
             - Path=/**
-#надо разбираться, тесты отваливаются и не доходят
-
 
 server:
   port: 8080
-
 
 management:
   endpoints:
