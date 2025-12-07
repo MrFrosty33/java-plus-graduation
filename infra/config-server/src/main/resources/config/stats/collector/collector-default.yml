@@ -1,0 +1,22 @@
+logging:
+  level:
+    root: INFO
+    ru.yandex.practicum.collector: TRACE
+
+grpc:
+  server:
+    port: 0
+    enableKeepAlive: true
+    keepAliveWithoutCalls: true
+    negotiationType: plaintext
+
+topics:
+  userActions: "stats.user-actions.v1"
+
+kafka-collector:
+  producer:
+    properties:
+      bootstrap.servers: "localhost:9092"
+      group.id: "telemetry-collector-producer-v1"
+      key.serializer: "org.apache.kafka.common.serialization.VoidSerializer"
+      value.serializer: "ru.yandex.practicum.kafka.serializer.GeneralAvroSerializer"

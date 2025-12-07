@@ -10,6 +10,7 @@
     </parent>
 
     <artifactId>proto-schemas</artifactId>
+    <packaging>jar</packaging>
 
     <dependencies>
         <dependency>
