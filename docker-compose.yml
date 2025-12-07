@@ -117,21 +117,6 @@ services:
 
   #------------------------ Applications ------------------------
 
-  # stats сервис
-  stats-server:
-    build:
-      context: .
-      dockerfile: stats/Dockerfile
-    environment:
-      SPRING_PROFILES_ACTIVE: docker
-      EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://discovery-server:8761/eureka/
-      SPRING_DATASOURCE_URL: jdbc:postgresql://stats-db:5432/ewm_stats
-      SPRING_DATASOURCE_USERNAME: stats
-      SPRING_DATASOURCE_PASSWORD: stats
-    depends_on:
-      config-server:
-        condition: service_healthy
-
   # event сервис
   event-service:
     build:
