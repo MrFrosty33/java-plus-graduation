@@ -44,3 +44,23 @@ kafka-analyzer:
       auto.offset.reset: "latest"
       isolation.level: "read_committed"
       enable.auto.commit: false
+
+spring:
+  sql:
+    init:
+      mode: always
+  datasource:
+    driver-class-name: org.postgresql.Driver
+    url: jdbc:postgresql://localhost:6542/ewm_stats
+    username: stats
+    password: stats
+  jpa:
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health, info, metrics

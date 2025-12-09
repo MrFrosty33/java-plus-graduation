@@ -20,3 +20,9 @@ kafka-collector:
       group.id: "telemetry-collector-producer-v1"
       key.serializer: "org.apache.kafka.common.serialization.VoidSerializer"
       value.serializer: "ru.yandex.practicum.kafka.serializer.GeneralAvroSerializer"
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health, info, metrics
