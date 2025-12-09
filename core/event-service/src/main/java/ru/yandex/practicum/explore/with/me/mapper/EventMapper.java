@@ -38,7 +38,6 @@ public interface EventMapper {
 
     default EventFullDto toFullDtoWithStats(Event event, EventStatistics stats) {
         EventFullDto dto = toFullDto(event);
-        dto.setViews(stats.getViews(event.getId()));
         dto.setConfirmedRequests(stats.getConfirmedRequests(event.getId()));
         return dto;
     }

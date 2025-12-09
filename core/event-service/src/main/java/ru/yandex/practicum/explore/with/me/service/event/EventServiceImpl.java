@@ -78,7 +78,7 @@ public class EventServiceImpl implements ExistenceValidator<Event>, EventService
         event.setState(EventState.PENDING);
         Event eventSaved = eventRepository.save(event);
         EventFullDto eventFullDto = eventMapper.toFullDto(eventSaved);
-        eventFullDto.setViews(0L);
+        eventFullDto.setRating(0.0);
 
         log.info("{}: result of createEvent(): {}", className, eventFullDto);
         return eventFullDto;
@@ -93,6 +93,7 @@ public class EventServiceImpl implements ExistenceValidator<Event>, EventService
         LocalDateTime endStats = LocalDateTime.now().truncatedTo(ChronoUnit.SECONDS);
         EventStatistics stats = getEventStatistics(events, startStats, endStats);
         EventFullDto result = eventMapper.toFullDtoWithStats(event, stats);
+        //todo заполнить rating через analyzer -> getInteractionsCount
         log.info("{}: result of getPrivateEventById(): {}", className, result);
         return result;
     }
@@ -161,6 +162,7 @@ public class EventServiceImpl implements ExistenceValidator<Event>, EventService
         LocalDateTime endStats = LocalDateTime.now().truncatedTo(ChronoUnit.SECONDS);
         EventStatistics stats = getEventStatistics(events, startStats, endStats);
         EventFullDto result = eventMapper.toFullDtoWithStats(event, stats);
+        //todo заполнить rating через analyzer -> getInteractionsCount
         log.info("{}: result of updateEvent(): {}", className, result);
         return result;
     }
@@ -272,6 +274,7 @@ public class EventServiceImpl implements ExistenceValidator<Event>, EventService
         LocalDateTime endStats = LocalDateTime.now().truncatedTo(ChronoUnit.SECONDS);
         EventStatistics stats = getEventStatistics(events, startStats, endStats);
         EventFullDto result = eventMapper.toFullDtoWithStats(event, stats);
+        //todo заполнить rating через analyzer -> getInteractionsCount
         log.info("{}: result of getPublicEventById(): {}", className, result);
         return result;
     }
@@ -292,6 +295,7 @@ public class EventServiceImpl implements ExistenceValidator<Event>, EventService
         LocalDateTime endStats = LocalDateTime.now().truncatedTo(ChronoUnit.SECONDS);
         EventStatistics stats = getEventStatistics(events, startStats, endStats);
         EventFullDto result = eventMapper.toFullDtoWithStats(event, stats);
+        //todo заполнить rating через analyzer -> getInteractionsCount
         log.info("{}: result of getInternalEventById(): {}", className, result);
         return result;
     }

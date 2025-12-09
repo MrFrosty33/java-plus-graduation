@@ -1,0 +1,45 @@
+logging:
+  level:
+    root: INFO
+    ru.yandex.practicum.collector: TRACE
+
+grpc:
+  server:
+    port: 59091
+    enableKeepAlive: true
+    keepAliveWithoutCalls: true
+    negotiationType: plaintext
+
+topics:
+  userActions: "stats.user-actions.v1"
+
+kafka-analyzer:
+  user-actions-consumer:
+    properties:
+      bootstrap.servers: "kafka:29092"
+      group.id: "stats-user-actions-consumers-v1"
+      key.deserializer: "org.apache.kafka.common.serialization.VoidDeserializer"
+      value.deserializer: "ru.yandex.practicum.kafka.serializer.UserActionDeserializer"
+
+      max.poll.records: 100
+      fetch.max.bytes: 3072000
+      max.partition.fetch.bytes: 307200
+
+      auto.offset.reset: "latest"
+      isolation.level: "read_committed"
+      enable.auto.commit: false
+
+  events-similarity-consumer:
+    properties:
+      bootstrap.servers: "kafka:29092"
+      group.id: "stats-events-similarity-consumers-v1"
+      key.deserializer: "org.apache.kafka.common.serialization.VoidDeserializer"
+      value.deserializer: "ru.yandex.practicum.kafka.serializer.EventsSimilarityDeserializer"
+
+      max.poll.records: 100
+      fetch.max.bytes: 3072000
+      max.partition.fetch.bytes: 307200
+
+      auto.offset.reset: "latest"
+      isolation.level: "read_committed"
+      enable.auto.commit: false

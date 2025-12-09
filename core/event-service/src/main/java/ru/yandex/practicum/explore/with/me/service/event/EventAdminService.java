@@ -66,6 +66,8 @@ public class EventAdminService {
         List<EventFullDto> result = events.stream()
                 .map(event -> mapper.toFullDtoWithStats(event, stats))
                 .toList();
+
+        //todo заполнить rating через analyzer -> getInteractionsCount
         log.info("{}: result of search(): {}", className, result);
         return result;
     }
