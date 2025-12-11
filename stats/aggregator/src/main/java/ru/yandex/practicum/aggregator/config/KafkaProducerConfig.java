@@ -8,7 +8,7 @@ import java.util.Properties;
 
 @Data
 @Component
-@ConfigurationProperties(prefix = "kafka-aggregator.user-actions-consumer")
-public class KafkaUserActionsConsumerConfig {
+@ConfigurationProperties(prefix = "kafka-aggregator.events-similarity-producer")
+public class KafkaProducerConfig {
     private Properties properties;
 }

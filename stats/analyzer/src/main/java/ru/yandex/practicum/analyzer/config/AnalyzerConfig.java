@@ -14,7 +14,7 @@ import java.util.Map;
 
 @Configuration
 @RequiredArgsConstructor
-public class KafkaConsumerConfig {
+public class AnalyzerConfig {
     private final KafkaEventsSimilarityConsumerConfig eventsSimilarityConsumerConfig;
     private final KafkaUserActionsConsumerConfig userActionsConsumerConfig;
 
