@@ -1,5 +1,6 @@
 package ru.yandex.practicum.analyzer.service;
 
+import com.fasterxml.jackson.databind.json.JsonMapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.kafka.annotation.KafkaListener;
@@ -23,13 +24,15 @@ public class AnalyzerServiceKafka {
     private final InteractionRepository interactionRepository;
     private final SimilarityRepository similarityRepository;
 
+    private final JsonMapper jsonMapper;
+
     @KafkaListener(
             topics = "#{@topicConfig.userActions}",
             containerFactory = "userActionKafkaListenerContainerFactory"
     )
     public void consumeUserActions(UserActionAvro avro) {
         try {
-            log.trace("{}: consumeUserActions() polled UserActionAvro: {}", className, avro);
+            log.trace("{}: consumeUserActions() polled UserActionAvro: {}", className, jsonMapper.writeValueAsString(avro));
             Optional<Interaction> existingInteraction =
                     interactionRepository.findByUserIdAndEventId(avro.getUserId(), avro.getEventId());
 
@@ -77,7 +80,7 @@ public class AnalyzerServiceKafka {
     )
     public void consumeEventSimilarity(EventSimilarityAvro avro) {
         try {
-            log.trace("{}: consumeEventSimilarity() polled EventSimilarityAvro: {}", className, avro);
+            log.trace("{}: consumeEventSimilarity() polled EventSimilarityAvro: {}", className, jsonMapper.writeValueAsString(avro));
             Optional<Similarity> existingSimilarity =
                     similarityRepository.findByEventIdAAndEventIdB(avro.getEventA().getId(), avro.getEventB().getId());
 
