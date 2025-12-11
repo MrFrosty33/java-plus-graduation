@@ -7,8 +7,6 @@ import ru.practicum.ewm.stats.proto.InteractionsCountRequestProto;
 import ru.practicum.ewm.stats.proto.RecommendedEventProto;
 import ru.practicum.ewm.stats.proto.SimilarEventsRequestProto;
 import ru.practicum.ewm.stats.proto.UserPredictionsRequestProto;
-import ru.yandex.practicum.analyzer.mapper.InteractionMapper;
-import ru.yandex.practicum.analyzer.mapper.SimilarityMapper;
 import ru.yandex.practicum.analyzer.model.Interaction;
 import ru.yandex.practicum.analyzer.model.Similarity;
 import ru.yandex.practicum.analyzer.repository.InteractionRepository;
@@ -29,8 +27,6 @@ import java.util.stream.Stream;
 public class AnalyzerServiceImpl implements AnalyzerService {
     private final InteractionRepository interactionRepository;
     private final SimilarityRepository similarityRepository;
-    private final InteractionMapper interactionMapper;
-    private final SimilarityMapper similarityMapper;
 
     private final String className = this.getClass().getSimpleName();
 
