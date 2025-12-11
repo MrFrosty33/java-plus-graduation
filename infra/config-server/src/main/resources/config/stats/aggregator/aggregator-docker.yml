@@ -1,0 +1,46 @@
+logging:
+  level:
+    root: INFO
+    ru.yandex.practicum.aggregator: TRACE
+
+grpc:
+  server:
+    port: 0
+    enableKeepAlive: true
+    keepAliveWithoutCalls: true
+    negotiationType: plaintext
+
+topics:
+  userActions: "stats.user-actions.v1"
+  eventsSimilarity: "stats.events-similarity.v1"
+
+kafka-aggregator:
+  events-similarity-producer:
+    properties:
+      bootstrap.servers: "localhost:9092"
+      group.id: "telemetry-collector-producer-v1"
+      key.serializer: "org.apache.kafka.common.serialization.VoidSerializer"
+      value.serializer: "ru.yandex.practicum.kafka.serializer.GeneralAvroSerializer"
+
+  user-actions-consumer:
+    properties:
+      bootstrap.servers: "kafka:29092"
+      group.id: "stats-user-actions-consumers-v1"
+      key.deserializer: "org.apache.kafka.common.serialization.VoidDeserializer"
+      value.deserializer: "ru.yandex.practicum.kafka.serializer.UserActionDeserializer"
+
+      max.poll.records: 100
+      fetch.max.bytes: 3072000
+      max.partition.fetch.bytes: 307200
+
+      auto.offset.reset: "latest"
+      isolation.level: "read_committed"
+      enable.auto.commit: false
+
+
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health, info, metrics
