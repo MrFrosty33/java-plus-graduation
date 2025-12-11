@@ -16,6 +16,7 @@ import ru.yandex.practicum.analyzer.repository.SimilarityRepository;
 
 import java.util.Comparator;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -85,6 +86,22 @@ public class AnalyzerServiceImpl implements AnalyzerService {
 
     @Override
     public Stream<RecommendedEventProto> getInteractionsCount(InteractionsCountRequestProto request) {
-        return Stream.empty();
+        List<Interaction> interactions = interactionRepository.findByEventIdIn(request.getEventIdList());
+
+        // группируем по eventId и считаем сумму всех rating
+        Map<Long, Double> eventRatingMap = interactions.stream()
+                .collect(Collectors.groupingBy(
+                        Interaction::getEventId,
+                        Collectors.summingDouble(Interaction::getRating)
+                ));
+
+        // маппим в RecommendedEventProto
+        return eventRatingMap.entrySet().stream()
+                .map(entry -> RecommendedEventProto.newBuilder()
+                        .setEventId(entry.getKey())
+                        .setScore(entry.getValue())
+                        .build()
+                )
+                .peek(proto -> log.trace("{}: result of getInteractionsCount: {}", className, proto));
     }
 }

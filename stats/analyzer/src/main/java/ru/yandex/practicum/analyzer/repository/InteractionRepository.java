@@ -7,4 +7,6 @@ import java.util.List;
 
 public interface InteractionRepository extends JpaRepository<Long, Interaction> {
     List<Interaction> findByUserId(Long userId);
+
+    List<Interaction> findByEventIdIn(List<Long> eventId);
 }
