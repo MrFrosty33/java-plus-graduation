@@ -11,4 +11,7 @@ public interface SimilarityRepository extends JpaRepository<Long, Similarity> {
     @Query("SELECT s FROM Similarity s WHERE s.eventIdA = :event OR s.eventIdB = :event")
     List<Similarity> findByEventIdAOrEventIdB(@Param("event") Long event);
 
+    @Query("SELECT s FROM Similarity s WHERE s.eventIdA IN :eventIds OR s.eventIdB IN :eventIds")
+    List<Similarity> findByEventIdAOrEventIdBIn(@Param("eventIds") List<Long> eventIds);
+
 }
