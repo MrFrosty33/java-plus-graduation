@@ -7,6 +7,7 @@ import org.springframework.stereotype.Service;
 import ru.practicum.ewm.stats.avro.EventSimilarityAvro;
 import ru.practicum.ewm.stats.avro.UserActionAvro;
 import ru.yandex.practicum.analyzer.model.Interaction;
+import ru.yandex.practicum.analyzer.model.Similarity;
 import ru.yandex.practicum.analyzer.repository.InteractionRepository;
 import ru.yandex.practicum.analyzer.repository.SimilarityRepository;
 
@@ -51,6 +52,8 @@ public class AnalyzerServiceKafka {
                     //todo вопрос, надо ли обновлять ts
                     existingInteraction.get().setTimestamp(
                             LocalDateTime.ofInstant(avro.getTimestamp(), ZoneId.systemDefault()));
+
+                    log.trace("{}: interaction was updated: {}", className, existingInteraction.get());
                 }
             } else {
                 Interaction interaction = Interaction.builder()
@@ -61,6 +64,7 @@ public class AnalyzerServiceKafka {
                         .build();
 
                 interactionRepository.save(interaction);
+                log.trace("{}: new interaction was created: {}", className, interaction);
             }
         } catch (Exception e) {
             log.warn("{}: exception in consumeUserActions(): ", className, e);
@@ -74,7 +78,26 @@ public class AnalyzerServiceKafka {
     public void consumeEventSimilarity(EventSimilarityAvro avro) {
         try {
             log.trace("{}: consumeEventSimilarity() polled EventSimilarityAvro: {}", className, avro);
+            Optional<Similarity> existingSimilarity =
+                    similarityRepository.findByEventIdAAndEventIdB(avro.getEventA().getId(), avro.getEventB().getId());
 
+            if (existingSimilarity.isPresent()) {
+                existingSimilarity.get().setSimilarity(avro.getScore());
+                //todo вопрос, надо ли обновлять ts
+                existingSimilarity.get().setTimestamp(LocalDateTime.now());
+
+                log.trace("{}: similarity was updated: {}", className, existingSimilarity.get());
+            } else {
+                Similarity similarity = Similarity.builder()
+                        .eventIdA(avro.getEventA().getId())
+                        .eventIdB(avro.getEventB().getId())
+                        .similarity(avro.getScore())
+                        .timestamp(LocalDateTime.now())
+                        .build();
+
+                similarityRepository.save(similarity);
+                log.trace("{}: new similarity was created: {}", className, similarity);
+            }
         } catch (Exception e) {
             log.warn("{}: exception in consumeEventSimilarity(): ", className, e);
         }
