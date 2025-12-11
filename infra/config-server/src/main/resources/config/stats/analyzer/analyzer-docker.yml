@@ -1,7 +1,7 @@
 logging:
   level:
     root: INFO
-    ru.yandex.practicum.collector: TRACE
+    ru.yandex.practicum.analyzer: TRACE
 
 grpc:
   server:
