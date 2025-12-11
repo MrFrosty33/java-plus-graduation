@@ -36,6 +36,7 @@ public class AnalyzerServiceImpl implements AnalyzerService {
 
     @Override
     public Stream<RecommendedEventProto> getRecommendationsForUser(UserPredictionsRequestProto request) {
+        //todo метод выглядит трудно и громоздко. Стоит подумать над ним ещё
         List<Interaction> interactionsForUser = interactionRepository.findByUserId(request.getUserId());
         // если не было взаимодействий, то и рекомендовать пока что нечего
         if (interactionsForUser.isEmpty()) {
@@ -133,24 +134,7 @@ public class AnalyzerServiceImpl implements AnalyzerService {
         }
 
         // id соседних мероприятий
-        Set<Long> neighborEventIds = nearestNeighbors.values().stream()
-                // берём value List<Similarity>
-                .flatMap(List::stream)
-                .peek(similarity -> {
-                    log.trace("{}: getRecommendationsForUser() -> value of neighborEventIds after flatMap: {}", className, similarity);
-                })
-                // мапим id соседа
-                .map(similarity -> {
-                    if (nearestNeighbors.containsKey(similarity.getEventIdA())) {
-                        return similarity.getEventIdB();
-                    } else {
-                        return similarity.getEventIdA();
-                    }
-                })
-                .peek(similarity -> {
-                    log.trace("{}: getRecommendationsForUser() -> value of neighborEventIds after map: {}", className, similarity);
-                })
-                .collect(Collectors.toSet());
+        Set<Long> neighborEventIds = findNeighborEventIds(nearestNeighbors);
 
         // мапа событие - оценка
         Map<Long, Double> neighborRatingMap = interactionRepository
@@ -219,6 +203,27 @@ public class AnalyzerServiceImpl implements AnalyzerService {
                             .setScore(predictedRating)
                             .build();
                 });
+    }
+
+    private Set<Long> findNeighborEventIds(Map<Long, List<Similarity>> nearestNeighbors) {
+        return nearestNeighbors.values().stream()
+                // берём value List<Similarity>
+                .flatMap(List::stream)
+                .peek(similarity -> {
+                    log.trace("{}: getRecommendationsForUser() -> value of neighborEventIds after flatMap: {}", className, similarity);
+                })
+                // мапим id соседа
+                .map(similarity -> {
+                    if (nearestNeighbors.containsKey(similarity.getEventIdA())) {
+                        return similarity.getEventIdB();
+                    } else {
+                        return similarity.getEventIdA();
+                    }
+                })
+                .peek(similarity -> {
+                    log.trace("{}: getRecommendationsForUser() -> value of neighborEventIds after map: {}", className, similarity);
+                })
+                .collect(Collectors.toSet());
     }
 
     @Override
