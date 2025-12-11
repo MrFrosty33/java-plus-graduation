@@ -7,7 +7,7 @@ import ru.yandex.practicum.analyzer.model.Similarity;
 
 import java.util.List;
 
-public interface SimilarityRepository extends JpaRepository<Long, Similarity> {
+public interface SimilarityRepository extends JpaRepository<Similarity, Long> {
     @Query("SELECT s FROM Similarity s WHERE s.eventIdA = :event OR s.eventIdB = :event")
     List<Similarity> findByEventIdAOrEventIdB(@Param("event") Long event);
 
