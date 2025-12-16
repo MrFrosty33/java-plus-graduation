@@ -76,20 +76,25 @@ public class AggregatorServiceKafka {
             Double oldWeightA = maxWeight
                     .getOrDefault(eventA, Collections.emptyMap())
                     .getOrDefault(userId, 0.0);
+            log.trace("{}: found oldWeightA: {}", className, oldWeightA);
 
             // высчитываем новый вес
             Double newWeightA = Math.max(oldWeightA, weight);
+            log.trace("{}: calculated newWeightA: {}", className, newWeightA);
 
             // если вес поменялся, обновляем в мапе
-            if (newWeightA.equals(oldWeightA)) {
+            if (!newWeightA.equals(oldWeightA)) {
                 maxWeight
                         .computeIfAbsent(eventA, e -> new HashMap<>())
                         .put(userId, newWeightA);
+                log.trace("{}: maxWeight updated for userId: {}, new weight value: {}", className, userId, newWeightA);
             }
 
             // обновляем (S_a), сумму весов мероприятий
             Double deltaA = newWeightA - oldWeightA;
             eventWeightSum.merge(eventA, deltaA, Double::sum);
+            log.trace("{}: eventWeightSum updated for eventA: {}, new value: {}",
+                    className, eventA, eventWeightSum.get(eventA));
 
             for (Long eventB : maxWeight.keySet()) {
                 // сверяем с каждым другим событием
@@ -98,20 +103,28 @@ public class AggregatorServiceKafka {
                     Double weightB = maxWeight
                             .getOrDefault(eventB, Collections.emptyMap())
                             .getOrDefault(userId, 0.0);
+                    log.trace("{}: found weightB: {}", className, weightB);
 
                     // S_min до и после, а также разница S_min
                     Double oldWeightMin = Math.min(oldWeightA, weightB);
+                    log.trace("{}: calculated old S_min: {}", className, oldWeightMin);
                     Double newWeightMin = Math.min(newWeightA, weightB);
-                    Double deltsWeightMin = newWeightMin - oldWeightMin;
+                    log.trace("{}: calculated new S_min: {}", className, newWeightMin);
+                    Double deltaWeightMin = newWeightMin - oldWeightMin;
+                    log.trace("{}: calculated delta between old S_min and new S_min: {}", className, deltaWeightMin);
 
-                    // обновляем S_min(A, B)
-                    if (deltsWeightMin > 0) {
-                        Double newSMin = getMinWeightSum(eventA, eventB) + deltsWeightMin;
+                    // обновляем S_min(A, B), если они отличаются
+                    if (deltaWeightMin > 0) {
+                        Double newSMin = getMinWeightSum(eventA, eventB) + deltaWeightMin;
                         putMinWeightSum(eventA, eventB, newSMin);
+                        log.trace("{}: minWeightSum updated for eventA: {}, eventB: {}, new value: {}",
+                                className, eventA, eventB, newSMin);
                     }
 
                     // высчитываем similarity и собираем сообщение
                     Double similarity = calculateSimilarity(eventA, eventB);
+                    log.trace("{}: calculated similarity between eventA: {} and eventB: {}, value: {}",
+                            className, eventA, eventB, similarity);
 
                     EventSimilarityAvro similarityAvro = EventSimilarityAvro.newBuilder()
                             .setEventA(eventA)
