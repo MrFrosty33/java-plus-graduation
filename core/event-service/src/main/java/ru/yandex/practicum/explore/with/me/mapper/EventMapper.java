@@ -17,11 +17,11 @@ import ru.yandex.practicum.interaction.api.model.event.dto.EventFullDto;
 @Mapper(componentModel = "spring", uses = {UserMapper.class, CategoryMapper.class, CommentMapper.class})
 public interface EventMapper {
     @Mapping(target = "confirmedRequests", ignore = true)
-    @Mapping(target = "views", ignore = true)
+    @Mapping(target = "rating", ignore = true)
     EventFullDto toFullDto(Event event);
 
     @Mapping(target = "confirmedRequests", ignore = true)
-    @Mapping(target = "views", ignore = true)
+    @Mapping(target = "rating", ignore = true)
     EventShortDto toShortDto(Event event);
 
     @Mapping(target = "id", ignore = true)
@@ -44,7 +44,7 @@ public interface EventMapper {
 
     default EventShortDto toShortDtoWithStats(Event event, EventStatistics stats) {
         EventShortDto dto = toShortDto(event);
-        dto.setViews(stats.getViews(event.getId()));
+        dto.setRating(stats.getInteractions(event.getId()));
         dto.setConfirmedRequests(stats.getConfirmedRequests(event.getId()));
         return dto;
     }

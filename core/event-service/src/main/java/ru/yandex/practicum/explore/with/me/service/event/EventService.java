@@ -13,7 +13,6 @@ import ru.yandex.practicum.interaction.api.model.comment.dto.CommentDto;
 import ru.yandex.practicum.interaction.api.model.event.dto.EventFullDto;
 import ru.yandex.practicum.interaction.api.model.request.ParticipationRequestDto;
 
-import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
 
@@ -30,7 +29,7 @@ public interface EventService {
 
     List<EventShortDto> getEventsByUser(long userId, int from, int count);
 
-    Map<Long, Long> getEventViews(EventViewsParameters params);
+    Map<Long, Double> getEventInteractions(EventViewsParameters params);
 
     List<ParticipationRequestDto> getEventParticipationRequestsByUser(long userId, long eventId);
 
@@ -41,7 +40,7 @@ public interface EventService {
 
     Map<Long, Integer> getConfirmedRequests(List<Long> eventIds);
 
-    EventStatistics getEventStatistics(List<Event> events, LocalDateTime startStats, LocalDateTime endStats);
+    EventStatistics getEventStatistics(List<Event> events);
 
     List<CommentDto> getCommentsByEvent(Long eventId, int from, int size);
 }

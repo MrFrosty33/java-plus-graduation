@@ -8,6 +8,8 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import ru.practicum.ewm.stats.proto.InteractionsCountRequestProto;
+import ru.practicum.ewm.stats.proto.RecommendedEventProto;
 import ru.yandex.practicum.explore.with.me.mapper.EventMapper;
 import ru.yandex.practicum.explore.with.me.model.category.Category;
 import ru.yandex.practicum.explore.with.me.model.event.Event;
@@ -24,7 +26,6 @@ import ru.yandex.practicum.explore.with.me.model.event.dto.UpdateEventUserAction
 import ru.yandex.practicum.explore.with.me.model.event.dto.UpdateEventUserRequest;
 import ru.yandex.practicum.explore.with.me.repository.CategoryRepository;
 import ru.yandex.practicum.explore.with.me.repository.EventRepository;
-import ru.yandex.practicum.explore.with.me.stats.StatsGetter;
 import ru.yandex.practicum.interaction.api.exception.BadRequestException;
 import ru.yandex.practicum.interaction.api.exception.ConflictException;
 import ru.yandex.practicum.interaction.api.exception.NotFoundException;
@@ -39,7 +40,7 @@ import ru.yandex.practicum.interaction.api.model.request.ParticipationRequestDto
 import ru.yandex.practicum.interaction.api.model.request.ParticipationRequestStatus;
 import ru.yandex.practicum.interaction.api.model.user.UserDto;
 import ru.yandex.practicum.interaction.api.util.ExistenceValidator;
-import ru.yandex.practicum.stats.dto.ViewStats;
+import ru.yandex.practicum.stats.client.AnalyzerClient;
 
 import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
@@ -49,6 +50,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 @Service
 @RequiredArgsConstructor
@@ -61,8 +63,8 @@ public class EventServiceImpl implements ExistenceValidator<Event>, EventService
     private final CommentClient commentClient;
     private final CategoryRepository categoryRepository;
     private final EventMapper eventMapper;
-    private final StatsGetter statsGetter;
     private final RequestClient requestClient;
+    private final AnalyzerClient analyzerClient;
 
     @Transactional
     @Override
@@ -91,7 +93,7 @@ public class EventServiceImpl implements ExistenceValidator<Event>, EventService
         List<Event> events = List.of(event);
         LocalDateTime startStats = event.getCreatedOn().truncatedTo(ChronoUnit.SECONDS);
         LocalDateTime endStats = LocalDateTime.now().truncatedTo(ChronoUnit.SECONDS);
-        EventStatistics stats = getEventStatistics(events, startStats, endStats);
+        EventStatistics stats = getEventStatistics(events);
         EventFullDto result = eventMapper.toFullDtoWithStats(event, stats);
         //todo заполнить rating через analyzer -> getInteractionsCount
         log.info("{}: result of getPrivateEventById(): {}", className, result);
@@ -160,7 +162,7 @@ public class EventServiceImpl implements ExistenceValidator<Event>, EventService
         List<Event> events = List.of(event);
         LocalDateTime startStats = event.getCreatedOn().truncatedTo(ChronoUnit.SECONDS);
         LocalDateTime endStats = LocalDateTime.now().truncatedTo(ChronoUnit.SECONDS);
-        EventStatistics stats = getEventStatistics(events, startStats, endStats);
+        EventStatistics stats = getEventStatistics(events);
         EventFullDto result = eventMapper.toFullDtoWithStats(event, stats);
         //todo заполнить rating через analyzer -> getInteractionsCount
         log.info("{}: result of updateEvent(): {}", className, result);
@@ -178,7 +180,7 @@ public class EventServiceImpl implements ExistenceValidator<Event>, EventService
         }
         LocalDateTime startStats = events.getFirst().getCreatedOn().truncatedTo(ChronoUnit.SECONDS);
         LocalDateTime endStats = LocalDateTime.now().truncatedTo(ChronoUnit.SECONDS);
-        EventStatistics stats = getEventStatistics(events, startStats, endStats);
+        EventStatistics stats = getEventStatistics(events);
         List<EventShortDto> result = events.stream()
                 .map(event -> eventMapper.toShortDtoWithStats(event, stats))
                 .toList();
@@ -272,7 +274,7 @@ public class EventServiceImpl implements ExistenceValidator<Event>, EventService
         List<Event> events = List.of(event);
         LocalDateTime startStats = event.getCreatedOn().truncatedTo(ChronoUnit.SECONDS);
         LocalDateTime endStats = LocalDateTime.now().truncatedTo(ChronoUnit.SECONDS);
-        EventStatistics stats = getEventStatistics(events, startStats, endStats);
+        EventStatistics stats = getEventStatistics(events);
         EventFullDto result = eventMapper.toFullDtoWithStats(event, stats);
         //todo заполнить rating через analyzer -> getInteractionsCount
         log.info("{}: result of getPublicEventById(): {}", className, result);
@@ -293,7 +295,7 @@ public class EventServiceImpl implements ExistenceValidator<Event>, EventService
         List<Event> events = List.of(event);
         LocalDateTime startStats = event.getCreatedOn().truncatedTo(ChronoUnit.SECONDS);
         LocalDateTime endStats = LocalDateTime.now().truncatedTo(ChronoUnit.SECONDS);
-        EventStatistics stats = getEventStatistics(events, startStats, endStats);
+        EventStatistics stats = getEventStatistics(events);
         EventFullDto result = eventMapper.toFullDtoWithStats(event, stats);
         //todo заполнить rating через analyzer -> getInteractionsCount
         log.info("{}: result of getInternalEventById(): {}", className, result);
@@ -337,7 +339,7 @@ public class EventServiceImpl implements ExistenceValidator<Event>, EventService
                 : events.getFirst().getCreatedOn().truncatedTo(ChronoUnit.SECONDS);
         LocalDateTime endStats = LocalDateTime.now().truncatedTo(ChronoUnit.SECONDS);
 
-        EventStatistics stats = getEventStatistics(events, startStats, endStats);
+        EventStatistics stats = getEventStatistics(events);
         List<EventShortDto> result = events.stream()
                 .map(event -> eventMapper.toShortDtoWithStats(event, stats))
                 .toList();
@@ -346,17 +348,12 @@ public class EventServiceImpl implements ExistenceValidator<Event>, EventService
     }
 
     @Override
-    public Map<Long, Long> getEventViews(EventViewsParameters params) {
-        List<ViewStats> stats = statsGetter.getEventViewStats(params);
-        Map<Long, Long> views = new HashMap<>();
-        if (stats != null) {
-            for (ViewStats stat : stats) {
-                Long eventId = extractId(stat.getUri());
-                if (eventId != null) {
-                    views.put(eventId, stat.getHits());
-                }
-            }
-        }
+    public Map<Long, Double> getEventInteractions(EventViewsParameters params) {
+        InteractionsCountRequestProto requestProto = InteractionsCountRequestProto.newBuilder().build();
+        Stream<RecommendedEventProto> stats = analyzerClient.getInteractionsCount(requestProto);
+
+        Map<Long, Double> views = new HashMap<>();
+        stats.forEach(value -> views.put(value.getEventId(), value.getScore()));
         log.info("{}: result of getEventViews: {}", className, views);
         return views;
     }
@@ -398,15 +395,6 @@ public class EventServiceImpl implements ExistenceValidator<Event>, EventService
         });
     }
 
-    private Long extractId(String uri) {
-        try {
-            String[] parts = uri.split("/");
-            return Long.parseLong(parts[parts.length - 1]);
-        } catch (Exception e) {
-            return null;
-        }
-    }
-
     private Sort getSort(EventPublicSort sort) {
         if (sort == null) return Sort.unsorted();
         return switch (sort) {
@@ -425,17 +413,16 @@ public class EventServiceImpl implements ExistenceValidator<Event>, EventService
     }
 
     @Override
-    public EventStatistics getEventStatistics(List<Event> events, LocalDateTime start, LocalDateTime end) {
+    public EventStatistics getEventStatistics(List<Event> events) {
         if (events.isEmpty()) {
             return new EventStatistics(Map.of(), Map.of());
         }
 
         List<Long> eventIds = events.stream().map(Event::getId).toList();
         EventViewsParameters params = EventViewsParameters.builder()
-                .start(start)
-                .end(end)
-                .eventIds(eventIds).unique(true).build();
-        Map<Long, Long> viewStats = getEventViews(params);
+                .eventIds(eventIds)
+                .build();
+        Map<Long, Double> viewStats = getEventInteractions(params);
         Map<Long, Integer> confirmedRequests = getConfirmedRequests(eventIds);
         EventStatistics result = new EventStatistics(viewStats, confirmedRequests);
         log.info("{}: result of getEventStatistics(): {}", className, result);
