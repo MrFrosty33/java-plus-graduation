@@ -11,17 +11,20 @@ import org.springframework.http.HttpStatus;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
+import ru.practicum.ewm.stats.proto.ActionTypeProto;
+import ru.practicum.ewm.stats.proto.UserActionProto;
 import ru.yandex.practicum.explore.with.me.model.event.EventPublicSort;
 import ru.yandex.practicum.explore.with.me.model.event.PublicEventParam;
 import ru.yandex.practicum.explore.with.me.model.event.dto.EventShortDto;
 import ru.yandex.practicum.explore.with.me.service.event.EventService;
-import ru.yandex.practicum.explore.with.me.stats.StatsSaver;
 import ru.yandex.practicum.interaction.api.model.comment.dto.CommentDto;
 import ru.yandex.practicum.interaction.api.model.event.dto.EventFullDto;
+import ru.yandex.practicum.stats.client.CollectorClient;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -34,7 +37,7 @@ import java.util.Objects;
 @Validated
 public class EventPublicController {
     private final EventService eventsService;
-    private final StatsSaver statsSaver;
+    private final CollectorClient collectorClient;
     private final String className = this.getClass().getSimpleName();
 
     @GetMapping
@@ -49,8 +52,6 @@ public class EventPublicController {
                                          @RequestParam(defaultValue = "0") int from,
                                          @RequestParam(defaultValue = "10") int size,
                                          HttpServletRequest request) {
-        statsSaver.save(request, className);
-
         PublicEventParam publicEventParam = new PublicEventParam();
         publicEventParam.setText(Objects.requireNonNullElse(text, ""));
         publicEventParam.setCategories(categories);
@@ -69,8 +70,15 @@ public class EventPublicController {
     @GetMapping("/{eventId}")
     @ResponseStatus(HttpStatus.OK)
     public EventFullDto getEventById(@PathVariable @PositiveOrZero @NotNull Long eventId,
+                                     @RequestHeader("X-EWM-USER-ID") Long userId,
                                      HttpServletRequest request) {
-        statsSaver.save(request, className);
+        UserActionProto userActionProto = UserActionProto.newBuilder()
+                .setEventId(eventId)
+                .setUserId(userId)
+                .setActionType(ActionTypeProto.ACTION_VIEW)
+                .build();
+        collectorClient.collectUserAction(userActionProto);
+
         log.trace("{}: getEventById() call with eventId: {}", className, eventId);
         return eventsService.getPublicEventById(eventId);
     }
