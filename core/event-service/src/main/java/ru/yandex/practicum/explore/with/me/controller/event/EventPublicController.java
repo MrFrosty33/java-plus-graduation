@@ -1,6 +1,5 @@
 package ru.yandex.practicum.explore.with.me.controller.event;
 
-import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Positive;
 import jakarta.validation.constraints.PositiveOrZero;
@@ -17,6 +16,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 import ru.practicum.ewm.stats.proto.ActionTypeProto;
+import ru.practicum.ewm.stats.proto.RecommendedEvent;
 import ru.practicum.ewm.stats.proto.UserActionProto;
 import ru.yandex.practicum.explore.with.me.model.event.EventPublicSort;
 import ru.yandex.practicum.explore.with.me.model.event.PublicEventParam;
@@ -50,8 +50,7 @@ public class EventPublicController {
                                          @RequestParam(defaultValue = "false") Boolean onlyAvailable,
                                          @RequestParam(required = false) EventPublicSort sort,
                                          @RequestParam(defaultValue = "0") int from,
-                                         @RequestParam(defaultValue = "10") int size,
-                                         HttpServletRequest request) {
+                                         @RequestParam(defaultValue = "10") int size) {
         PublicEventParam publicEventParam = new PublicEventParam();
         publicEventParam.setText(Objects.requireNonNullElse(text, ""));
         publicEventParam.setCategories(categories);
@@ -70,8 +69,8 @@ public class EventPublicController {
     @GetMapping("/{eventId}")
     @ResponseStatus(HttpStatus.OK)
     public EventFullDto getEventById(@PathVariable @PositiveOrZero @NotNull Long eventId,
-                                     @RequestHeader("X-EWM-USER-ID") Long userId,
-                                     HttpServletRequest request) {
+                                     @RequestHeader("X-EWM-USER-ID") Long userId) {
+        log.trace("{}: getEventById() call with eventId: {} and userId: {}", className, eventId, userId);
         UserActionProto userActionProto = UserActionProto.newBuilder()
                 .setEventId(eventId)
                 .setUserId(userId)
@@ -79,7 +78,6 @@ public class EventPublicController {
                 .build();
         collectorClient.collectUserAction(userActionProto);
 
-        log.trace("{}: getEventById() call with eventId: {}", className, eventId);
         return eventsService.getPublicEventById(eventId);
     }
 
@@ -91,5 +89,13 @@ public class EventPublicController {
         log.trace("{}: getCommentsByEvent() call with eventId: {}, from: {}, size: {}",
                 className, eventId, from, size);
         return eventsService.getCommentsByEvent(eventId, from, size);
+    }
+
+    @GetMapping("/recommendations")
+    @ResponseStatus(HttpStatus.OK)
+    public List<RecommendedEvent> getRecommendations(@RequestHeader("X-EWM-USER-ID") Long userId) {
+        log.trace("{}: getRecommendations() call with userId: {}",
+                className, userId);
+        return eventsService.getRecommendations(userId);
     }
 }

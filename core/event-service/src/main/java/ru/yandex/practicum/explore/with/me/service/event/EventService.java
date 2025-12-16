@@ -1,5 +1,6 @@
 package ru.yandex.practicum.explore.with.me.service.event;
 
+import ru.practicum.ewm.stats.proto.RecommendedEvent;
 import ru.yandex.practicum.explore.with.me.model.event.Event;
 import ru.yandex.practicum.explore.with.me.model.event.EventStatistics;
 import ru.yandex.practicum.explore.with.me.model.event.PublicEventParam;
@@ -43,4 +44,6 @@ public interface EventService {
     EventStatistics getEventStatistics(List<Event> events);
 
     List<CommentDto> getCommentsByEvent(Long eventId, int from, int size);
+
+    List<RecommendedEvent> getRecommendations(Long userId);
 }
