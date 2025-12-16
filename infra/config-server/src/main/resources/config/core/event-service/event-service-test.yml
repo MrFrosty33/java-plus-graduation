@@ -14,6 +14,19 @@ spring:
     console:
       enabled: true
 
+grpc:
+  client:
+    analyzer: # <- должно соответствовать значению в @GrpcClient
+      address: 'discovery:///analyzer' # адрес gRPC-сервиса
+      enableKeepAlive: true
+      keepAliveWithoutCalls: true
+      negotiationType: plaintext
+  collector:
+    address: 'discovery:///collector'
+    enableKeepAlive: true
+    keepAliveWithoutCalls: true
+    negotiationType: plaintext
+
 logging:
   level:
     ru.yandex.practicum: TRACE
