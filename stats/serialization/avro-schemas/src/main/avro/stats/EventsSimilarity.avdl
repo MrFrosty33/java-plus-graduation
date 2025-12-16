@@ -1,7 +1,5 @@
 @namespace("ru.practicum.ewm.stats.avro")
 protocol EventsSimilarityProtocol {
-	import idl "Event.avdl";
-
 	record EventSimilarityAvro {
 		long eventA;
 		long eventB;
