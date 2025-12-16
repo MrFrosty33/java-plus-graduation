@@ -16,11 +16,11 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 import ru.practicum.ewm.stats.proto.ActionTypeProto;
-import ru.practicum.ewm.stats.proto.RecommendedEvent;
 import ru.practicum.ewm.stats.proto.UserActionProto;
 import ru.yandex.practicum.explore.with.me.model.event.EventPublicSort;
 import ru.yandex.practicum.explore.with.me.model.event.PublicEventParam;
 import ru.yandex.practicum.explore.with.me.model.event.dto.EventShortDto;
+import ru.yandex.practicum.explore.with.me.model.event.dto.RecommendedEventDto;
 import ru.yandex.practicum.explore.with.me.service.event.EventService;
 import ru.yandex.practicum.interaction.api.model.comment.dto.CommentDto;
 import ru.yandex.practicum.interaction.api.model.event.dto.EventFullDto;
@@ -93,7 +93,7 @@ public class EventPublicController {
 
     @GetMapping("/recommendations")
     @ResponseStatus(HttpStatus.OK)
-    public List<RecommendedEvent> getRecommendations(@RequestHeader("X-EWM-USER-ID") Long userId) {
+    public List<RecommendedEventDto> getRecommendations(@RequestHeader("X-EWM-USER-ID") Long userId) {
         log.trace("{}: getRecommendations() call with userId: {}",
                 className, userId);
         return eventsService.getRecommendations(userId);

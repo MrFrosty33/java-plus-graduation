@@ -10,6 +10,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import ru.practicum.ewm.stats.proto.InteractionsCountRequestProto;
 import ru.practicum.ewm.stats.proto.RecommendedEventProto;
+import ru.practicum.ewm.stats.proto.UserPredictionsRequestProto;
 import ru.yandex.practicum.explore.with.me.mapper.EventMapper;
 import ru.yandex.practicum.explore.with.me.model.category.Category;
 import ru.yandex.practicum.explore.with.me.model.event.Event;
@@ -21,6 +22,7 @@ import ru.yandex.practicum.explore.with.me.model.event.dto.EventRequestStatusUpd
 import ru.yandex.practicum.explore.with.me.model.event.dto.EventShortDto;
 import ru.yandex.practicum.explore.with.me.model.event.dto.EventViewsParameters;
 import ru.yandex.practicum.explore.with.me.model.event.dto.NewEventDto;
+import ru.yandex.practicum.explore.with.me.model.event.dto.RecommendedEventDto;
 import ru.yandex.practicum.explore.with.me.model.event.dto.StatusUpdateRequest;
 import ru.yandex.practicum.explore.with.me.model.event.dto.UpdateEventUserAction;
 import ru.yandex.practicum.explore.with.me.model.event.dto.UpdateEventUserRequest;
@@ -368,6 +370,24 @@ public class EventServiceImpl implements ExistenceValidator<Event>, EventService
                 )
         );
         log.info("{}: result of getConfirmedRequests: {}", className, result);
+        return result;
+    }
+
+    @Override
+    public List<RecommendedEventDto> getRecommendations(Long userId) {
+        userClient.findById(userId);
+        UserPredictionsRequestProto requestProto = UserPredictionsRequestProto.newBuilder()
+                .setUserId(userId)
+                //todo откуда берётся лимит?
+                .setMaxResults(5)
+                .build();
+        Stream<RecommendedEventProto> recommendedEventStream = analyzerClient.getRecommendationsForUser(requestProto);
+
+        List<RecommendedEventDto> result = recommendedEventStream
+                .map(value -> new RecommendedEventDto(value.getEventId(), value.getScore()))
+                .toList();
+
+        log.info("{}: result of getRecommendations(): {}", className, result);
         return result;
     }
 

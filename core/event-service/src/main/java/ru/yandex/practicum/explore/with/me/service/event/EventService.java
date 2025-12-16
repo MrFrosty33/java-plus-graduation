@@ -1,6 +1,5 @@
 package ru.yandex.practicum.explore.with.me.service.event;
 
-import ru.practicum.ewm.stats.proto.RecommendedEvent;
 import ru.yandex.practicum.explore.with.me.model.event.Event;
 import ru.yandex.practicum.explore.with.me.model.event.EventStatistics;
 import ru.yandex.practicum.explore.with.me.model.event.PublicEventParam;
@@ -9,6 +8,7 @@ import ru.yandex.practicum.explore.with.me.model.event.dto.EventRequestStatusUpd
 import ru.yandex.practicum.explore.with.me.model.event.dto.EventShortDto;
 import ru.yandex.practicum.explore.with.me.model.event.dto.EventViewsParameters;
 import ru.yandex.practicum.explore.with.me.model.event.dto.NewEventDto;
+import ru.yandex.practicum.explore.with.me.model.event.dto.RecommendedEventDto;
 import ru.yandex.practicum.explore.with.me.model.event.dto.UpdateEventUserRequest;
 import ru.yandex.practicum.interaction.api.model.comment.dto.CommentDto;
 import ru.yandex.practicum.interaction.api.model.event.dto.EventFullDto;
@@ -45,5 +45,5 @@ public interface EventService {
 
     List<CommentDto> getCommentsByEvent(Long eventId, int from, int size);
 
-    List<RecommendedEvent> getRecommendations(Long userId);
+    List<RecommendedEventDto> getRecommendations(Long userId);
 }
