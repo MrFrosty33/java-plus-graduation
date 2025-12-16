@@ -15,6 +15,7 @@ import ru.yandex.practicum.aggregator.config.KafkaEventsSimilarityProducerConfig
 import ru.yandex.practicum.aggregator.config.TopicConfig;
 import ru.yandex.practicum.aggregator.exception.JsonException;
 
+import java.time.Instant;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
@@ -45,16 +46,16 @@ public class AggregatorServiceKafka {
         this.eventsSimilarityProducer = new KafkaProducer<>(kafkaEventsSimilarityProducerConfig.getProperties());
     }
 
-    @KafkaListener(topics = "#{@topicConfig.userActions}", containerFactory = "userActionKafkaListenerContainerFactory")
+    @KafkaListener(
+            topics = "#{@topicConfig.userActions}",
+            containerFactory = "userActionKafkaListenerContainerFactory"
+    )
     public void consumeUserActions(UserActionAvro avro) {
         try {
             log.trace("{}: consumeUserActions() polled UserActionAvro: {}", className, avro);
-            //todo
-            // если новое - рассчитывается сходство с остальными мероприятиями
-            // если очередное - обновить S_min(A, B), S_a, S_b. После вычислить коэфф схожести для каждой пары
-            // где в паре A - текущее мероприятие, В - каждое из других мероприятий
-            // рассчитанные значения упаковать в EventSimilarityAvro и sendAvro();
 
+            Long eventA = avro.getEventId();
+            Long userId = avro.getUserId();
 
             // назначаем вес
             Double weight = 0.0;
@@ -71,26 +72,63 @@ public class AggregatorServiceKafka {
             }
             log.trace("{}: calculated weight: {} for ActionType: {}", className, weight, avro.getActionType());
 
-            maxWeight
-                    // если записи нет - помещаем новую
-                    .computeIfAbsent(avro.getEventId(), e -> new HashMap<>())
-                    // если же есть, помещает только в том случае, если weight выше того, что уже хранится
-                    .merge(avro.getUserId(), weight, Math::max);
+            // находим старый вес, или же 0.0, если его нет
+            Double oldWeightA = maxWeight
+                    .getOrDefault(eventA, Collections.emptyMap())
+                    .getOrDefault(userId, 0.0);
 
-            if (eventWeightSum.containsKey(avro.getEventId())) {
-                // если уже есть сумма весов, добавляем к значению
-                eventWeightSum.put(avro.getEventId(), eventWeightSum.get(avro.getEventId()) + weight);
-            } else {
-                // если же нет, просто создаём новую запись
-                eventWeightSum.put(avro.getEventId(), weight);
+            // высчитываем новый вес
+            Double newWeightA = Math.max(oldWeightA, weight);
+
+            // если вес поменялся, обновляем в мапе
+            if (newWeightA.equals(oldWeightA)) {
+                maxWeight
+                        .computeIfAbsent(eventA, e -> new HashMap<>())
+                        .put(userId, newWeightA);
             }
 
+            // обновляем (S_a), сумму весов мероприятий
+            Double deltaA = newWeightA - oldWeightA;
+            eventWeightSum.merge(eventA, deltaA, Double::sum);
 
-        } catch (
-                Exception e) {
+            for (Long eventB : maxWeight.keySet()) {
+                // сверяем с каждым другим событием
+                if (!eventB.equals(eventA)) {
+
+                    Double weightB = maxWeight
+                            .getOrDefault(eventB, Collections.emptyMap())
+                            .getOrDefault(userId, 0.0);
+
+                    // S_min до и после, а также разница S_min
+                    Double oldWeightMin = Math.min(oldWeightA, weightB);
+                    Double newWeightMin = Math.min(newWeightA, weightB);
+                    Double deltsWeightMin = newWeightMin - oldWeightMin;
+
+                    // обновляем S_min(A, B)
+                    if (deltsWeightMin > 0) {
+                        Double newSMin = getMinWeightSum(eventA, eventB) + deltsWeightMin;
+                        putMinWeightSum(eventA, eventB, newSMin);
+                    }
+
+                    // высчитываем similarity и собираем сообщение
+                    Double similarity = calculateSimilarity(eventA, eventB);
+
+                    EventSimilarityAvro similarityAvro = EventSimilarityAvro.newBuilder()
+                            .setEventA(eventA)
+                            .setEventB(eventB)
+                            .setScore(similarity)
+                            .setTimestamp(Instant.now())
+                            .build();
+
+                    sendAvro(similarityAvro);
+                }
+            }
+
+        } catch (Exception e) {
             log.warn("{}: exception in consumeUserActions(): ", className, e);
         }
     }
+
 
     public void sendAvro(EventSimilarityAvro avro) {
         String topic = topicConfig.getEventsSimilarity();
@@ -131,11 +169,7 @@ public class AggregatorServiceKafka {
         Long second = Math.max(eventA, eventB);
 
         // S_min(Ip, Iq)
-        Double sMin = minWeightSum
-                // берём вложенную Map<EventIdB, S_minWeight>
-                .getOrDefault(first, Collections.emptyMap())
-                // берём значение для second, если оно есть
-                .get(second);
+        Double sMin = getMinWeightSum(first, second);
         if (sMin == null) {
             // если не было найдено значение для second, назначаем 0.0
             sMin = 0.0;
