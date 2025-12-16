@@ -82,7 +82,7 @@ public class AnalyzerServiceKafka {
         try {
             log.trace("{}: consumeEventSimilarity() polled EventSimilarityAvro: {}", className, jsonMapper.writeValueAsString(avro));
             Optional<Similarity> existingSimilarity =
-                    similarityRepository.findByEventIdAAndEventIdB(avro.getEventA().getId(), avro.getEventB().getId());
+                    similarityRepository.findByEventIdAAndEventIdB(avro.getEventA(), avro.getEventB());
 
             if (existingSimilarity.isPresent()) {
                 existingSimilarity.get().setSimilarity(avro.getScore());
@@ -92,8 +92,8 @@ public class AnalyzerServiceKafka {
                 log.trace("{}: similarity was updated: {}", className, existingSimilarity.get());
             } else {
                 Similarity similarity = Similarity.builder()
-                        .eventIdA(avro.getEventA().getId())
-                        .eventIdB(avro.getEventB().getId())
+                        .eventIdA(avro.getEventA())
+                        .eventIdB(avro.getEventB())
                         .similarity(avro.getScore())
                         .timestamp(LocalDateTime.now())
                         .build();

@@ -3,8 +3,8 @@ protocol EventsSimilarityProtocol {
 	import idl "Event.avdl";
 
 	record EventSimilarityAvro {
-		EventAvro eventA;
-		EventAvro eventB;
+		long eventA;
+		long eventB;
 		double score;
 		timestamp_ms timestamp;
 	}
