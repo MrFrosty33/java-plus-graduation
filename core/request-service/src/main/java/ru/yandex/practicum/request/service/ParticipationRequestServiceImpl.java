@@ -164,10 +164,6 @@ public class ParticipationRequestServiceImpl implements ParticipationRequestServ
                 .build();
         collectorClient.collectUserAction(actionProto);
 
-        //todo хм, возможно, будет не совсем это корректной логикой
-        // во время лайка в event-service я опираюсь на то, что была создана эта заявка, приравнивая её к посещению
-        // а по факту заявку могут и отклонить))
-
         log.info("{}: sent UserActionProto: {} to collector", className, actionProto);
 
         return result;

@@ -47,6 +47,7 @@ import ru.yandex.practicum.interaction.api.util.ExistenceValidator;
 import ru.yandex.practicum.stats.client.AnalyzerClient;
 import ru.yandex.practicum.stats.client.CollectorClient;
 
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -395,8 +396,9 @@ public class EventServiceImpl implements ExistenceValidator<Event>, EventService
         userClient.findById(userId);
         EventStatistics eventStat = getEventStatistics(List.of(event));
 
-        // проверяем, посещал ли событие пользователь.
-        if (eventStat.getInteractions().getOrDefault(userId, 0.0) != 0.8) {
+        // проверяем, существует и подтверждена ли заявка на посещение и прошло ли событие уже
+        if (!(requestClient.existsByRequesterIdAndEventIdAndStatus(userId, eventId, ParticipationRequestStatus.CONFIRMED)
+                && event.getEventDate().isBefore(LocalDateTime.now()))) {
             log.warn("{}: user with id: {} attempted to like event with id: {} without participating in it", className, userId, eventId);
             throw new BadRequestException("You can only like events you participated in", "Participation not found");
         }
