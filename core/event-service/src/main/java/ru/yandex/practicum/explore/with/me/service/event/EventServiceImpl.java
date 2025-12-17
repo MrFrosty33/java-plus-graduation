@@ -47,8 +47,6 @@ import ru.yandex.practicum.interaction.api.util.ExistenceValidator;
 import ru.yandex.practicum.stats.client.AnalyzerClient;
 import ru.yandex.practicum.stats.client.CollectorClient;
 
-import java.time.LocalDateTime;
-import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -97,8 +95,6 @@ public class EventServiceImpl implements ExistenceValidator<Event>, EventService
     public EventFullDto getPrivateEventById(long userId, long eventId) {
         Event event = getEventIfInitiatedByUser(userId, eventId);
         List<Event> events = List.of(event);
-        LocalDateTime startStats = event.getCreatedOn().truncatedTo(ChronoUnit.SECONDS);
-        LocalDateTime endStats = LocalDateTime.now().truncatedTo(ChronoUnit.SECONDS);
         EventStatistics stats = getEventStatistics(events);
         EventFullDto result = eventMapper.toFullDtoWithStats(event, stats);
         //todo заполнить rating через analyzer -> getInteractionsCount
@@ -166,8 +162,6 @@ public class EventServiceImpl implements ExistenceValidator<Event>, EventService
         }
         eventRepository.save(event);
         List<Event> events = List.of(event);
-        LocalDateTime startStats = event.getCreatedOn().truncatedTo(ChronoUnit.SECONDS);
-        LocalDateTime endStats = LocalDateTime.now().truncatedTo(ChronoUnit.SECONDS);
         EventStatistics stats = getEventStatistics(events);
         EventFullDto result = eventMapper.toFullDtoWithStats(event, stats);
         //todo заполнить rating через analyzer -> getInteractionsCount
@@ -184,8 +178,6 @@ public class EventServiceImpl implements ExistenceValidator<Event>, EventService
         if (events.isEmpty()) {
             return List.of();
         }
-        LocalDateTime startStats = events.getFirst().getCreatedOn().truncatedTo(ChronoUnit.SECONDS);
-        LocalDateTime endStats = LocalDateTime.now().truncatedTo(ChronoUnit.SECONDS);
         EventStatistics stats = getEventStatistics(events);
         List<EventShortDto> result = events.stream()
                 .map(event -> eventMapper.toShortDtoWithStats(event, stats))
