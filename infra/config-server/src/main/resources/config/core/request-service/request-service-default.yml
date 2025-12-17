@@ -13,6 +13,14 @@ spring:
       hibernate:
         dialect: org.hibernate.dialect.PostgreSQLDialect
 
+grpc:
+  client:
+  collector:
+    address: 'discovery:///collector'
+    enableKeepAlive: true
+    keepAliveWithoutCalls: true
+    negotiationType: plaintext
+
 logging:
   level:
     ru.yandex.practicum: TRACE
