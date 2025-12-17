@@ -10,6 +10,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -97,5 +98,14 @@ public class EventPublicController {
         log.trace("{}: getRecommendations() call with userId: {} and size: {}",
                 className, userId, size);
         return eventsService.getRecommendations(userId, size);
+    }
+
+    @PutMapping("/{eventId}/like")
+    @ResponseStatus(HttpStatus.OK)
+    public void like(@PathVariable @PositiveOrZero @NotNull Long eventId,
+                     @RequestHeader("X-EWM-USER-ID") Long userId) {
+        log.trace("{}: like() call with eventId: {} and userId: {}",
+                className, eventId, userId);
+        eventsService.like(eventId, userId);
     }
 }

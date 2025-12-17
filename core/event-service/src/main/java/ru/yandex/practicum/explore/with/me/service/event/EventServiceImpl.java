@@ -8,8 +8,10 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import ru.practicum.ewm.stats.proto.ActionTypeProto;
 import ru.practicum.ewm.stats.proto.InteractionsCountRequestProto;
 import ru.practicum.ewm.stats.proto.RecommendedEventProto;
+import ru.practicum.ewm.stats.proto.UserActionProto;
 import ru.practicum.ewm.stats.proto.UserPredictionsRequestProto;
 import ru.yandex.practicum.explore.with.me.mapper.EventMapper;
 import ru.yandex.practicum.explore.with.me.model.category.Category;
@@ -43,6 +45,7 @@ import ru.yandex.practicum.interaction.api.model.request.ParticipationRequestSta
 import ru.yandex.practicum.interaction.api.model.user.UserDto;
 import ru.yandex.practicum.interaction.api.util.ExistenceValidator;
 import ru.yandex.practicum.stats.client.AnalyzerClient;
+import ru.yandex.practicum.stats.client.CollectorClient;
 
 import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
@@ -67,6 +70,7 @@ public class EventServiceImpl implements ExistenceValidator<Event>, EventService
     private final EventMapper eventMapper;
     private final RequestClient requestClient;
     private final AnalyzerClient analyzerClient;
+    private final CollectorClient collectorClient;
 
     @Transactional
     @Override
@@ -388,6 +392,31 @@ public class EventServiceImpl implements ExistenceValidator<Event>, EventService
 
         log.info("{}: result of getRecommendations(): {}", className, result);
         return result;
+    }
+
+    @Override
+    public void like(Long eventId, Long userId) {
+        Event event = eventRepository.findById(eventId).orElseThrow(() -> {
+            log.info("{}: event with id: {} not found", className, eventId);
+            return new NotFoundException("The required object was not found.", "Event with id=" + eventId + " was not found");
+        });
+        userClient.findById(userId);
+        EventStatistics eventStat = getEventStatistics(List.of(event));
+
+        // проверяем, посещал ли событие пользователь.
+        if (eventStat.getInteractions().getOrDefault(userId, 0.0) != 0.8) {
+            log.warn("{}: user with id: {} attempted to like event with id: {} without participating in it", className, userId, eventId);
+            throw new BadRequestException("You can only like events you participated in", "Participation not found");
+        }
+
+        UserActionProto actionProto = UserActionProto.newBuilder()
+                .setEventId(eventId)
+                .setUserId(userId)
+                .setActionType(ActionTypeProto.ACTION_LIKE)
+                .build();
+
+        collectorClient.collectUserAction(actionProto);
+        log.info("{}: user with id: {} liked event with id: {}", className, userId, eventId);
     }
 
     private Event getEventIfInitiatedByUser(long userId, long eventId) {
