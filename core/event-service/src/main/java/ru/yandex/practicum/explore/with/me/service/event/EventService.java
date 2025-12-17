@@ -45,5 +45,5 @@ public interface EventService {
 
     List<CommentDto> getCommentsByEvent(Long eventId, int from, int size);
 
-    List<RecommendedEventDto> getRecommendations(Long userId);
+    List<RecommendedEventDto> getRecommendations(Long userId, int size);
 }

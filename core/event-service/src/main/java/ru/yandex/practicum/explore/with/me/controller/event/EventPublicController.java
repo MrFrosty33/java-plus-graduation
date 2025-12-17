@@ -93,9 +93,9 @@ public class EventPublicController {
 
     @GetMapping("/recommendations")
     @ResponseStatus(HttpStatus.OK)
-    public List<RecommendedEventDto> getRecommendations(@RequestHeader("X-EWM-USER-ID") Long userId) {
-        log.trace("{}: getRecommendations() call with userId: {}",
-                className, userId);
-        return eventsService.getRecommendations(userId);
+    public List<RecommendedEventDto> getRecommendations(@RequestHeader("X-EWM-USER-ID") Long userId, @RequestParam(defaultValue = "10") @Positive int size) {
+        log.trace("{}: getRecommendations() call with userId: {} and size: {}",
+                className, userId, size);
+        return eventsService.getRecommendations(userId, size);
     }
 }

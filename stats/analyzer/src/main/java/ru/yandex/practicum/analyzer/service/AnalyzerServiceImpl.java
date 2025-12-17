@@ -32,7 +32,6 @@ public class AnalyzerServiceImpl implements AnalyzerService {
 
     @Override
     public Stream<RecommendedEventProto> getRecommendationsForUser(UserPredictionsRequestProto request) {
-        //todo метод выглядит трудно и громоздко. Стоит подумать над ним ещё
         List<Interaction> interactionsForUser = interactionRepository.findByUserId(request.getUserId());
         // если не было взаимодействий, то и рекомендовать пока что нечего
         if (interactionsForUser.isEmpty()) {
@@ -89,8 +88,8 @@ public class AnalyzerServiceImpl implements AnalyzerService {
                 })
                 .collect(Collectors.toSet());
 
-        //todo откуда берётся K?
-        int K = 5; // количество ближайших соседей
+        // K является константой, наставник посоветовал задать 20.
+        int K = 20; // количество ближайших соседей
         Map<Long, List<Similarity>> nearestNeighbors = new HashMap<>();
 
         for (Interaction interaction : interactionsForUser) {

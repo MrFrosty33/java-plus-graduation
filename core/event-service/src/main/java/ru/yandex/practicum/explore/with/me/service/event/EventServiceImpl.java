@@ -374,12 +374,11 @@ public class EventServiceImpl implements ExistenceValidator<Event>, EventService
     }
 
     @Override
-    public List<RecommendedEventDto> getRecommendations(Long userId) {
+    public List<RecommendedEventDto> getRecommendations(Long userId, int size) {
         userClient.findById(userId);
         UserPredictionsRequestProto requestProto = UserPredictionsRequestProto.newBuilder()
                 .setUserId(userId)
-                //todo откуда берётся лимит?
-                .setMaxResults(5)
+                .setMaxResults(size)
                 .build();
         Stream<RecommendedEventProto> recommendedEventStream = analyzerClient.getRecommendationsForUser(requestProto);
 
