@@ -16,8 +16,6 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
-import ru.practicum.ewm.stats.proto.ActionTypeProto;
-import ru.practicum.ewm.stats.proto.UserActionProto;
 import ru.yandex.practicum.explore.with.me.model.event.EventPublicSort;
 import ru.yandex.practicum.explore.with.me.model.event.PublicEventParam;
 import ru.yandex.practicum.explore.with.me.model.event.dto.EventShortDto;
@@ -25,7 +23,6 @@ import ru.yandex.practicum.explore.with.me.model.event.dto.RecommendedEventDto;
 import ru.yandex.practicum.explore.with.me.service.event.EventService;
 import ru.yandex.practicum.interaction.api.model.comment.dto.CommentDto;
 import ru.yandex.practicum.interaction.api.model.event.dto.EventFullDto;
-import ru.yandex.practicum.stats.client.CollectorClient;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -38,7 +35,6 @@ import java.util.Objects;
 @Validated
 public class EventPublicController {
     private final EventService eventsService;
-    private final CollectorClient collectorClient;
     private final String className = this.getClass().getSimpleName();
 
     @GetMapping
@@ -72,14 +68,7 @@ public class EventPublicController {
     public EventFullDto getEventById(@PathVariable @PositiveOrZero @NotNull Long eventId,
                                      @RequestHeader("X-EWM-USER-ID") Long userId) {
         log.trace("{}: getEventById() call with eventId: {} and userId: {}", className, eventId, userId);
-        UserActionProto userActionProto = UserActionProto.newBuilder()
-                .setEventId(eventId)
-                .setUserId(userId)
-                .setActionType(ActionTypeProto.ACTION_VIEW)
-                .build();
-        collectorClient.collectUserAction(userActionProto);
-
-        return eventsService.getPublicEventById(eventId);
+        return eventsService.getPublicEventById(userId, eventId);
     }
 
     @GetMapping("/{eventId}/comments")

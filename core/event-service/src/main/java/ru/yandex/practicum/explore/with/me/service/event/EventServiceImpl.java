@@ -269,7 +269,7 @@ public class EventServiceImpl implements ExistenceValidator<Event>, EventService
 
     @Override
     @Transactional(readOnly = true)
-    public EventFullDto getPublicEventById(long eventId) {
+    public EventFullDto getPublicEventById(Long userId, long eventId) {
         //todo заполнять ещё и комментарии?
         Event event = eventRepository.findByIdAndState(eventId, EventState.PUBLISHED)
                 .orElseThrow(() -> {
@@ -278,12 +278,18 @@ public class EventServiceImpl implements ExistenceValidator<Event>, EventService
                             "Event with id=" + eventId + " and state=" + EventState.PUBLISHED + " was not found");
                 });
         List<Event> events = List.of(event);
-        LocalDateTime startStats = event.getCreatedOn().truncatedTo(ChronoUnit.SECONDS);
-        LocalDateTime endStats = LocalDateTime.now().truncatedTo(ChronoUnit.SECONDS);
         EventStatistics stats = getEventStatistics(events);
         EventFullDto result = eventMapper.toFullDtoWithStats(event, stats);
-        //todo заполнить rating через analyzer -> getInteractionsCount
         log.info("{}: result of getPublicEventById(): {}", className, result);
+
+        UserActionProto actionProto = UserActionProto.newBuilder()
+                .setEventId(eventId)
+                .setUserId(userId)
+                .setActionType(ActionTypeProto.ACTION_VIEW)
+                .build();
+        collectorClient.collectUserAction(actionProto);
+        log.info("{}: sent UserActionProto: {} to collector", className, actionProto);
+
         return result;
     }
 
@@ -299,8 +305,6 @@ public class EventServiceImpl implements ExistenceValidator<Event>, EventService
                             "Event with id=" + eventId + " was not found");
                 });
         List<Event> events = List.of(event);
-        LocalDateTime startStats = event.getCreatedOn().truncatedTo(ChronoUnit.SECONDS);
-        LocalDateTime endStats = LocalDateTime.now().truncatedTo(ChronoUnit.SECONDS);
         EventStatistics stats = getEventStatistics(events);
         EventFullDto result = eventMapper.toFullDtoWithStats(event, stats);
         //todo заполнить rating через analyzer -> getInteractionsCount
@@ -340,10 +344,6 @@ public class EventServiceImpl implements ExistenceValidator<Event>, EventService
         if (events.isEmpty()) {
             return List.of();
         }
-
-        LocalDateTime startStats = params.getRangeStart() != null ? params.getRangeStart().truncatedTo(ChronoUnit.SECONDS)
-                : events.getFirst().getCreatedOn().truncatedTo(ChronoUnit.SECONDS);
-        LocalDateTime endStats = LocalDateTime.now().truncatedTo(ChronoUnit.SECONDS);
 
         EventStatistics stats = getEventStatistics(events);
         List<EventShortDto> result = events.stream()
@@ -414,9 +414,10 @@ public class EventServiceImpl implements ExistenceValidator<Event>, EventService
                 .setUserId(userId)
                 .setActionType(ActionTypeProto.ACTION_LIKE)
                 .build();
-
         collectorClient.collectUserAction(actionProto);
+
         log.info("{}: user with id: {} liked event with id: {}", className, userId, eventId);
+        log.info("{}: sent UserActionProto: {} to collector", className, actionProto);
     }
 
     private Event getEventIfInitiatedByUser(long userId, long eventId) {
