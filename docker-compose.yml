@@ -116,6 +116,41 @@ services:
         condition: service_healthy
 
   #------------------------ Applications ------------------------
+  # analyzer сервис
+  aggregator:
+    build:
+      context: .
+      dockerfile: stats/aggregator/Dockerfile
+    environment:
+      EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://discovery-server:8761/eureka/
+    depends_on:
+      config-server:
+        condition: service_healthy
+
+  # analyzer сервис
+  analyzer:
+    build:
+      context: .
+      dockerfile: stats/analyzer/Dockerfile
+    environment:
+      EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://discovery-server:8761/eureka/
+      SPRING_DATASOURCE_URL: jdbc:postgresql://stats-db:5432/ewv_stats
+      SPRING_DATASOURCE_USERNAME: stats
+      SPRING_DATASOURCE_PASSWORD: stats
+    depends_on:
+      config-server:
+        condition: service_healthy
+
+  # collector сервис
+  collector:
+    build:
+      context: .
+      dockerfile: stats/collector/Dockerfile
+    environment:
+      EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://discovery-server:8761/eureka/
+    depends_on:
+      config-server:
+        condition: service_healthy
 
   # event сервис
   event-service:
