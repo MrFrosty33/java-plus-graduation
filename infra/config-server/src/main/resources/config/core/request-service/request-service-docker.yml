@@ -14,11 +14,11 @@ spring:
 
 grpc:
   client:
-  collector:
-    address: 'discovery:///collector'
-    enableKeepAlive: true
-    keepAliveWithoutCalls: true
-    negotiationType: plaintext
+    collector:
+      address: 'discovery:///collector'
+      enableKeepAlive: true
+      keepAliveWithoutCalls: true
+      negotiationType: plaintext
 
 logging:
   level:
