@@ -53,6 +53,16 @@ services:
       KAFKA_LISTENERS: 'PLAINTEXT://kafka:29092,CONTROLLER://kafka:29093,PLAINTEXT_HOST://0.0.0.0:9092'
       CLUSTER_ID: 'K0EA9p0yEe6MkAAAAkKsEg'
 
+  kafka-ui:
+    image: provectuslabs/kafka-ui:latest
+    ports:
+      - "8083:8080"
+    environment:
+      - KAFKA_CLUSTERS_0_NAME=local
+      - KAFKA_CLUSTERS_0_BOOTSTRAPSERVERS=kafka:29092
+    depends_on:
+      - kafka
+
   kafka-init-topics:
     image: confluentinc/confluent-local:7.4.3
     depends_on:

@@ -15,7 +15,6 @@ import ru.yandex.practicum.aggregator.config.KafkaEventsSimilarityProducerConfig
 import ru.yandex.practicum.aggregator.config.TopicConfig;
 import ru.yandex.practicum.aggregator.exception.JsonException;
 
-import java.time.Instant;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
@@ -97,8 +96,8 @@ public class AggregatorServiceKafka {
                     className, eventA, eventWeightSum.get(eventA));
 
             for (Long eventB : maxWeight.keySet()) {
-                // сверяем с каждым другим событием
-                if (!eventB.equals(eventA)) {
+                // сверяем с каждым другим событием и только для события, связанного с userId
+                if (!eventB.equals(eventA) && maxWeight.get(eventB).containsKey(userId)) {
 
                     Double weightB = maxWeight
                             .getOrDefault(eventB, Collections.emptyMap())
@@ -126,11 +125,12 @@ public class AggregatorServiceKafka {
                     log.trace("{}: calculated similarity between eventA: {} and eventB: {}, value: {}",
                             className, eventA, eventB, similarity);
 
+
                     EventSimilarityAvro similarityAvro = EventSimilarityAvro.newBuilder()
-                            .setEventA(eventA)
-                            .setEventB(eventB)
+                            .setEventA(Math.min(eventA, eventB))
+                            .setEventB(Math.max(eventA, eventB))
                             .setScore(similarity)
-                            .setTimestamp(Instant.now())
+                            .setTimestamp(avro.getTimestamp())
                             .build();
 
                     sendAvro(similarityAvro);
