@@ -34,6 +34,8 @@ public class AggregatorServiceKafka {
     private final Map<Long, Map<Long, Double>> minWeightSum = new HashMap<>();
     //            Map<EventId, Weight>, сумма весов мероприятия
     private final Map<Long, Double> eventWeightSum = new HashMap<>();
+    //            Map<EventPair, Similarity>, схожесть пары мероприятий
+    private final Map<EventPair, Double> eventsSimilarity = new HashMap<>();
 
 
     public AggregatorServiceKafka(JsonMapper jsonMapper,
@@ -125,15 +127,22 @@ public class AggregatorServiceKafka {
                     log.trace("{}: calculated similarity between eventA: {} and eventB: {}, value: {}",
                             className, eventA, eventB, similarity);
 
+                    EventPair eventPair = new EventPair(Math.min(eventA, eventB), Math.max(eventA, eventB));
 
-                    EventSimilarityAvro similarityAvro = EventSimilarityAvro.newBuilder()
-                            .setEventA(Math.min(eventA, eventB))
-                            .setEventB(Math.max(eventA, eventB))
-                            .setScore(similarity)
-                            .setTimestamp(avro.getTimestamp())
-                            .build();
+                    Double oldSimilarity = eventsSimilarity.get(eventPair);
+                    if (oldSimilarity == null || Double.compare(oldSimilarity, similarity) != 0) {
+                        eventsSimilarity.put(eventPair, similarity);
 
-                    sendAvro(similarityAvro);
+
+                        EventSimilarityAvro similarityAvro = EventSimilarityAvro.newBuilder()
+                                .setEventA(Math.min(eventA, eventB))
+                                .setEventB(Math.max(eventA, eventB))
+                                .setScore(similarity)
+                                .setTimestamp(avro.getTimestamp())
+                                .build();
+
+                        sendAvro(similarityAvro);
+                    }
                 }
             }
 
