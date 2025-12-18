@@ -1,14 +1,16 @@
 package ru.yandex.practicum.stats.client;
 
 import net.devh.boot.grpc.client.inject.GrpcClient;
+import org.springframework.stereotype.Component;
 import ru.practicum.ewm.stats.proto.UserActionControllerGrpc;
 import ru.practicum.ewm.stats.proto.UserActionProto;
 
+@Component
 public class GrpcCollectorClient implements CollectorClient {
-    @GrpcClient("collector")
     private final UserActionControllerGrpc.UserActionControllerBlockingStub stub;
 
-    public GrpcCollectorClient(UserActionControllerGrpc.UserActionControllerBlockingStub stub) {
+    public GrpcCollectorClient(@GrpcClient("collector")
+                               UserActionControllerGrpc.UserActionControllerBlockingStub stub) {
         this.stub = stub;
     }
 

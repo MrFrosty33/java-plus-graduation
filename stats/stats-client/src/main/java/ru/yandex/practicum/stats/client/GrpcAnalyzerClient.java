@@ -1,6 +1,7 @@
 package ru.yandex.practicum.stats.client;
 
 import net.devh.boot.grpc.client.inject.GrpcClient;
+import org.springframework.stereotype.Component;
 import ru.practicum.ewm.stats.proto.InteractionsCountRequestProto;
 import ru.practicum.ewm.stats.proto.RecommendationsControllerGrpc;
 import ru.practicum.ewm.stats.proto.RecommendedEventProto;
@@ -13,11 +14,12 @@ import java.util.Spliterators;
 import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
 
+@Component
 public class GrpcAnalyzerClient implements AnalyzerClient {
-    @GrpcClient("analyzer")
     private final RecommendationsControllerGrpc.RecommendationsControllerBlockingStub stub;
 
-    public GrpcAnalyzerClient(RecommendationsControllerGrpc.RecommendationsControllerBlockingStub stub) {
+    public GrpcAnalyzerClient(@GrpcClient("analyzer")
+                              RecommendationsControllerGrpc.RecommendationsControllerBlockingStub stub) {
         this.stub = stub;
     }
 
