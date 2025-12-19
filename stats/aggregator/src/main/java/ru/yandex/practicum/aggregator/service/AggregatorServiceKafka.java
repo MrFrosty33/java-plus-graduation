@@ -85,6 +85,9 @@ public class AggregatorServiceKafka {
 
     private Optional<EventSimilarityAvro> calculateSimilarity(Long eventA, Long eventB, Double dotProduct, Instant timestamp) {
         try {
+            log.trace("{}: calculateSimilarity(eventA={}, eventB={}, dotProduct={}, timestamp={})",
+                    className, eventA, eventB, dotProduct, timestamp);
+
             double normA = calculateNorm(eventA);
             double normB = calculateNorm(eventB);
 
@@ -103,8 +106,7 @@ public class AggregatorServiceKafka {
                     .build();
 
             Optional<EventSimilarityAvro> result = Optional.of(similarityAvro);
-            log.trace("{}: result of calculateSimilarity(eventA={}, eventB={}, dotProduct={}, timestamp={}): {}",
-                    className, eventA, eventB, dotProduct, timestamp, jsonMapper.writeValueAsString(result));
+            log.info("{}: result of calculateSimilarity(): {}", className, jsonMapper.writeValueAsString(result));
 
             return result;
         } catch (JsonProcessingException e) {
@@ -116,11 +118,15 @@ public class AggregatorServiceKafka {
     private List<EventSimilarityAvro> recalculateSimilarities(Long eventId, Long userId,
                                                               Double newWeight, Double oldWeight,
                                                               Instant timestamp) {
+        log.trace("{}: recalculateSimilarities(eventId={}, userId={}, newWeight={}, oldWeight={}, timestamp={})",
+                className, eventId, userId, newWeight, oldWeight, timestamp);
+
         List<EventSimilarityAvro> updatedSimilarities = new ArrayList<>();
 
         // Map<EventId, dotProduct>, скалярное произведение к событию
         Map<Long, Double> eventDotProductMap = scalarResultMatrix.computeIfAbsent(eventId, e -> new HashMap<>());
         double dotProduct = eventDotProductMap.getOrDefault(eventId, 0.0);
+        log.trace("{}: dotProduct: {}", className, dotProduct);
 
         // находим разницу
         double delta;
@@ -160,11 +166,15 @@ public class AggregatorServiceKafka {
                         } else {
                             oldMinWeight = Math.min(oldWeight, otherWeight);
                         }
+                        log.trace("{}: oldMinWeight: {}", currentDot, oldMinWeight);
 
                         double newMinWeight = Math.min(newWeight, otherWeight);
+                        log.trace("{}: newMinWeight: {}", currentDot, newMinWeight);
 
                         double dotDelta = newMinWeight - oldMinWeight;
                         double updatedDot = currentDot + dotDelta;
+                        log.trace("{}: updatedDot: {}", currentDot, updatedDot);
+
                         dotMap.put(eventB, updatedDot);
 
                         // рассчитываем similarity и добавляем в список, если она была рассчитана
@@ -175,6 +185,7 @@ public class AggregatorServiceKafka {
             }
         }
 
+        log.info("{}: result of recalculateSimilarities(): {}", className, updatedSimilarities);
         return updatedSimilarities;
     }
 
@@ -184,7 +195,7 @@ public class AggregatorServiceKafka {
         if (eventDotProductMap == null) return 0.0;
 
         double result = Math.sqrt(eventDotProductMap.getOrDefault(eventId, 0.0));
-        log.trace("{}: result of calculateNorm(eventId = {}): {}", className, eventId, result);
+        log.info("{}: result of calculateNorm(eventId = {}): {}", className, eventId, result);
 
         return result;
     }

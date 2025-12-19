@@ -11,6 +11,4 @@ public class ActionWeightConfig {
     private Double view;
     private Double register;
     private Double like;
-
-    public Double getActionWeight(Actio)
 }
