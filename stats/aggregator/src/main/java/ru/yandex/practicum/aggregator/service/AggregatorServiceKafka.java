@@ -128,11 +128,11 @@ public class AggregatorServiceKafka {
                             className, eventA, eventB, similarity);
 
                     EventPair eventPair = new EventPair(Math.min(eventA, eventB), Math.max(eventA, eventB));
-
                     Double oldSimilarity = eventsSimilarity.get(eventPair);
+
+                    // только, если схожести не было или она поменялась, отправляем сообщение
                     if (oldSimilarity == null || Double.compare(oldSimilarity, similarity) != 0) {
                         eventsSimilarity.put(eventPair, similarity);
-
 
                         EventSimilarityAvro similarityAvro = EventSimilarityAvro.newBuilder()
                                 .setEventA(Math.min(eventA, eventB))
@@ -142,15 +142,19 @@ public class AggregatorServiceKafka {
                                 .build();
 
                         sendAvro(similarityAvro);
+                        //todo получается, что во время тестов AGGREGATION то ли отправляются лишние данные,
+                        // то ли тестер подтягивает старые данные из кафки и хотя всё считается корректно,
+                        // появляются лишние записи в кафке и в тесте не сходится ожидаемое с полученным количеством записей
+                        // в чём дело не могу понять уже второй день :(((
                     }
                 }
             }
-
         } catch (Exception e) {
             log.warn("{}: exception in consumeUserActions(): ", className, e);
         }
     }
 
+    //todo в тестах analyzer возможно request-service или где ещё не отправляются сообщения
 
     public void sendAvro(EventSimilarityAvro avro) {
         String topic = topicConfig.getEventsSimilarity();
