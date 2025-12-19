@@ -18,7 +18,9 @@ import ru.yandex.practicum.aggregator.config.TopicConfig;
 import ru.yandex.practicum.aggregator.exception.JsonException;
 
 import java.time.Instant;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
@@ -71,7 +73,6 @@ public class AggregatorServiceKafka {
     public void consumeUserActions(UserActionAvro avro) {
         try {
             log.trace("{}: consumeUserActions() polled UserActionAvro: {}", className, avro);
-            log.trace("{}: consumeUserActions() polled UserActionAvro: {}", className, avro);
 
             Long eventId = avro.getEventId();
             Long userId = avro.getUserId();
@@ -84,8 +85,8 @@ public class AggregatorServiceKafka {
 
     private Optional<EventSimilarityAvro> calculateSimilarity(Long eventA, Long eventB, Double dotProduct, Instant timestamp) {
         try {
-            Double normA = calculateNorm(eventA);
-            Double normB = calculateNorm(eventB);
+            double normA = calculateNorm(eventA);
+            double normB = calculateNorm(eventB);
 
             if (normA == 0 || normB == 0) {
                 log.trace("{}: similarity can't be calculated, one of normA: {} or normB: {} is zero",
@@ -93,7 +94,7 @@ public class AggregatorServiceKafka {
                 return Optional.empty();
             }
 
-            Double similarity = dotProduct / (normA * normB);
+            double similarity = dotProduct / (normA * normB);
             EventSimilarityAvro similarityAvro = EventSimilarityAvro.newBuilder()
                     .setEventA(eventA)
                     .setEventB(eventB)
@@ -112,18 +113,83 @@ public class AggregatorServiceKafka {
         }
     }
 
-    private Double calculateNorm(Long eventId) {
+    private List<EventSimilarityAvro> recalculateSimilarities(Long eventId, Long userId,
+                                                              Double newWeight, Double oldWeight,
+                                                              Instant timestamp) {
+        List<EventSimilarityAvro> updatedSimilarities = new ArrayList<>();
+
+        // Map<EventId, dotProduct>, скалярное произведение к событию
+        Map<Long, Double> eventDotProductMap = scalarResultMatrix.computeIfAbsent(eventId, e -> new HashMap<>());
+        double dotProduct = eventDotProductMap.getOrDefault(eventId, 0.0);
+
+        // находим разницу
+        double delta;
+        if (oldWeight == null) {
+            delta = newWeight;
+        } else {
+            delta = newWeight - oldWeight;
+        }
+        // обновляем eventDotProductMap
+        double newDotProductValue = dotProduct + delta;
+        eventDotProductMap.put(eventId, newDotProductValue);
+        log.trace("{}: eventDotProductMap updated, eventId: {}, newDotProductValue: {}",
+                className, eventId, newDotProductValue);
+
+        // обновляем dot-products для каждого другого события
+        for (Long otherEventId : eventUserWeight.keySet()) {
+            // отсеиваем дубликаты текущего eventId
+            if (!eventId.equals(otherEventId)) {
+                Map<Long, Double> otherUserWeights = eventUserWeight.get(otherEventId);
+
+                // отсеиваем ивенты, у которых ещё не было взаимодействий
+                if (otherUserWeights != null) {
+                    Double otherWeight = otherUserWeights.get(userId);
+
+                    // отсеиваем ивенты, с которым наш пользователь не взаимодействовал
+                    if (otherWeight != null) {
+                        // чтобы ивенты всегда шли от меньшего к большему
+                        long eventA = Math.min(eventId, otherEventId);
+                        long eventB = Math.max(eventId, otherEventId);
+
+                        Map<Long, Double> dotMap = scalarResultMatrix.computeIfAbsent(eventA, k -> new HashMap<>());
+                        double currentDot = dotMap.getOrDefault(eventB, 0.0);
+
+                        double oldMinWeight;
+                        if (oldWeight == null) {
+                            oldMinWeight = 0.0;
+                        } else {
+                            oldMinWeight = Math.min(oldWeight, otherWeight);
+                        }
+
+                        double newMinWeight = Math.min(newWeight, otherWeight);
+
+                        double dotDelta = newMinWeight - oldMinWeight;
+                        double updatedDot = currentDot + dotDelta;
+                        dotMap.put(eventB, updatedDot);
+
+                        // рассчитываем similarity и добавляем в список, если она была рассчитана
+                        Optional<EventSimilarityAvro> similarity = calculateSimilarity(eventA, eventB, updatedDot, timestamp);
+                        similarity.ifPresent(updatedSimilarities::add);
+                    }
+                }
+            }
+        }
+
+        return updatedSimilarities;
+    }
+
+    private double calculateNorm(Long eventId) {
         // Map<EventId, dotProduct>, скалярное произведение к событию
         Map<Long, Double> eventDotProductMap = scalarResultMatrix.get(eventId);
         if (eventDotProductMap == null) return 0.0;
 
-        Double result = Math.sqrt(eventDotProductMap.getOrDefault(eventId, 0.0));
+        double result = Math.sqrt(eventDotProductMap.getOrDefault(eventId, 0.0));
         log.trace("{}: result of calculateNorm(eventId = {}): {}", className, eventId, result);
 
         return result;
     }
 
-    private Double getActionWeight(ActionTypeAvro action) {
+    private double getActionWeight(ActionTypeAvro action) {
         return switch (action) {
             case VIEW -> weightConfig.getView();
             case REGISTER -> weightConfig.getRegister();
