@@ -19,6 +19,8 @@ import ru.yandex.practicum.aggregator.exception.JsonException;
 
 import java.time.Instant;
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -78,41 +80,65 @@ public class AggregatorServiceKafka {
             Long userId = avro.getUserId();
             Double newWeight = getActionWeight(avro.getActionType());
 
+            // Обновляем вес пользователя для события и получаем список similarity для отправки
+            List<EventSimilarityAvro> similaritiesToSend = updateEventWeight(eventId, userId, newWeight, avro.getTimestamp());
+
+            // Сортируем и отправляем разом
+            similaritiesToSend.stream()
+                    .sorted(Comparator.comparingLong(EventSimilarityAvro::getEventA)
+                            .thenComparingLong(EventSimilarityAvro::getEventB))
+                    .forEach(this::sendAvro);
+
         } catch (Exception e) {
             log.warn("{}: exception in consumeUserActions(): ", className, e);
         }
     }
 
-    private Optional<EventSimilarityAvro> calculateSimilarity(Long eventA, Long eventB, Double dotProduct, Instant timestamp) {
-        try {
-            log.trace("{}: calculateSimilarity(eventA={}, eventB={}, dotProduct={}, timestamp={})",
-                    className, eventA, eventB, dotProduct, timestamp);
+    private List<EventSimilarityAvro> updateEventWeight(Long eventId, Long userId, Double newWeight, Instant timestamp) {
+        log.trace("{}: calculateSimilarity(eventId={}, userId={}, newWeight={}, timestamp={})",
+                className, eventId, userId, newWeight, timestamp);
 
-            double normA = calculateNorm(eventA);
-            double normB = calculateNorm(eventB);
+        // находим или же создаём мапу весов
+        Map<Long, Double> userWeights = eventUserWeight.computeIfAbsent(eventId, key -> new HashMap<>());
+        Double oldWeight = userWeights.get(userId);
 
-            if (normA == 0 || normB == 0) {
-                log.trace("{}: similarity can't be calculated, one of normA: {} or normB: {} is zero",
-                        className, normA, normB);
-                return Optional.empty();
-            }
-
-            double similarity = dotProduct / (normA * normB);
-            EventSimilarityAvro similarityAvro = EventSimilarityAvro.newBuilder()
-                    .setEventA(eventA)
-                    .setEventB(eventB)
-                    .setScore(similarity)
-                    .setTimestamp(timestamp)
-                    .build();
-
-            Optional<EventSimilarityAvro> result = Optional.of(similarityAvro);
-            log.info("{}: result of calculateSimilarity(): {}", className, jsonMapper.writeValueAsString(result));
-
+        // обновляем и пересчитываем схожесть только в том случае, если новый вес больше старого
+        if (oldWeight == null || newWeight > oldWeight) {
+            userWeights.put(userId, newWeight);
+            List<EventSimilarityAvro> result = recalculateSimilarities(eventId, userId, newWeight, oldWeight, timestamp);
+            log.trace("{}: result of updateEventWeight(): {}", className, result);
             return result;
-        } catch (JsonProcessingException e) {
-            logJsonException(e);
-            throw new JsonException("Error processing avroMessage to JSON");
         }
+
+        log.trace("{}: result of updateEventWeight(): no need to update event weight", className);
+        return Collections.emptyList();
+    }
+
+    private Optional<EventSimilarityAvro> calculateSimilarity(Long eventA, Long eventB, Double dotProduct, Instant timestamp) {
+        log.trace("{}: calculateSimilarity(eventA={}, eventB={}, dotProduct={}, timestamp={})",
+                className, eventA, eventB, dotProduct, timestamp);
+
+        double normA = calculateNorm(eventA);
+        double normB = calculateNorm(eventB);
+
+        if (normA == 0 || normB == 0) {
+            log.trace("{}: similarity can't be calculated, one of normA: {} or normB: {} is zero",
+                    className, normA, normB);
+            return Optional.empty();
+        }
+
+        double similarity = dotProduct / (normA * normB);
+        EventSimilarityAvro similarityAvro = EventSimilarityAvro.newBuilder()
+                .setEventA(eventA)
+                .setEventB(eventB)
+                .setScore(similarity)
+                .setTimestamp(timestamp)
+                .build();
+
+        Optional<EventSimilarityAvro> result = Optional.of(similarityAvro);
+        log.info("{}: result of calculateSimilarity(): {}", className, result);
+
+        return result;
     }
 
     private List<EventSimilarityAvro> recalculateSimilarities(Long eventId, Long userId,
@@ -124,7 +150,7 @@ public class AggregatorServiceKafka {
         List<EventSimilarityAvro> updatedSimilarities = new ArrayList<>();
 
         // Map<EventId, dotProduct>, скалярное произведение к событию
-        Map<Long, Double> eventDotProductMap = scalarResultMatrix.computeIfAbsent(eventId, e -> new HashMap<>());
+        Map<Long, Double> eventDotProductMap = scalarResultMatrix.computeIfAbsent(eventId, key -> new HashMap<>());
         double dotProduct = eventDotProductMap.getOrDefault(eventId, 0.0);
         log.trace("{}: dotProduct: {}", className, dotProduct);
 
@@ -187,6 +213,7 @@ public class AggregatorServiceKafka {
 
         log.info("{}: result of recalculateSimilarities(): {}", className, updatedSimilarities);
         return updatedSimilarities;
+
     }
 
     private double calculateNorm(Long eventId) {
