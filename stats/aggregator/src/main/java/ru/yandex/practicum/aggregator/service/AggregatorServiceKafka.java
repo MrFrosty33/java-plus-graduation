@@ -17,8 +17,10 @@ import ru.yandex.practicum.aggregator.config.KafkaEventsSimilarityProducerConfig
 import ru.yandex.practicum.aggregator.config.TopicConfig;
 import ru.yandex.practicum.aggregator.exception.JsonException;
 
+import java.time.Instant;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Optional;
 
 @Slf4j
 @Service
@@ -57,7 +59,7 @@ public class AggregatorServiceKafka {
             log.warn("{}: failed to send EventSimilarityAvro: {} with topic: {}", className, e.getMessage(), topic);
             throw e;
         } catch (JsonProcessingException e) {
-            log.warn("{}: error processing avroMessage to JSON: {}", className, e.getMessage());
+            logJsonException(e);
             throw new JsonException("Error processing avroMessage to JSON");
         }
     }
@@ -69,12 +71,56 @@ public class AggregatorServiceKafka {
     public void consumeUserActions(UserActionAvro avro) {
         try {
             log.trace("{}: consumeUserActions() polled UserActionAvro: {}", className, avro);
+            log.trace("{}: consumeUserActions() polled UserActionAvro: {}", className, avro);
 
-
+            Long eventId = avro.getEventId();
+            Long userId = avro.getUserId();
+            Double newWeight = getActionWeight(avro.getActionType());
 
         } catch (Exception e) {
             log.warn("{}: exception in consumeUserActions(): ", className, e);
         }
+    }
+
+    private Optional<EventSimilarityAvro> calculateSimilarity(Long eventA, Long eventB, Double dotProduct, Instant timestamp) {
+        try {
+            Double normA = calculateNorm(eventA);
+            Double normB = calculateNorm(eventB);
+
+            if (normA == 0 || normB == 0) {
+                log.trace("{}: similarity can't be calculated, one of normA: {} or normB: {} is zero",
+                        className, normA, normB);
+                return Optional.empty();
+            }
+
+            Double similarity = dotProduct / (normA * normB);
+            EventSimilarityAvro similarityAvro = EventSimilarityAvro.newBuilder()
+                    .setEventA(eventA)
+                    .setEventB(eventB)
+                    .setScore(similarity)
+                    .setTimestamp(timestamp)
+                    .build();
+
+            Optional<EventSimilarityAvro> result = Optional.of(similarityAvro);
+            log.trace("{}: result of calculateSimilarity(eventA={}, eventB={}, dotProduct={}, timestamp={}): {}",
+                    className, eventA, eventB, dotProduct, timestamp, jsonMapper.writeValueAsString(result));
+
+            return result;
+        } catch (JsonProcessingException e) {
+            logJsonException(e);
+            throw new JsonException("Error processing avroMessage to JSON");
+        }
+    }
+
+    private Double calculateNorm(Long eventId) {
+        // Map<EventId, dotProduct>, скалярное произведение к событию
+        Map<Long, Double> eventDotProductMap = scalarResultMatrix.get(eventId);
+        if (eventDotProductMap == null) return 0.0;
+
+        Double result = Math.sqrt(eventDotProductMap.getOrDefault(eventId, 0.0));
+        log.trace("{}: result of calculateNorm(eventId = {}): {}", className, eventId, result);
+
+        return result;
     }
 
     private Double getActionWeight(ActionTypeAvro action) {
@@ -83,6 +129,11 @@ public class AggregatorServiceKafka {
             case REGISTER -> weightConfig.getRegister();
             case LIKE -> weightConfig.getLike();
         };
+    }
+
+    private void logJsonException(Exception e) {
+        // чтобы не ругалось на одинаковые сообщения в логах вынес сюда
+        log.warn("{}: error processing avroMessage to JSON: {}", className, e.getMessage());
     }
 
     //todo в тестах analyzer возможно request-service или где ещё не отправляются сообщения
