@@ -26,14 +26,14 @@ kafka-aggregator:
   events-similarity-producer:
     properties:
       bootstrap.servers: "localhost:9092"
-      group.id: "telemetry-collector-producer-v1"
+      group.id: "stats-aggregator-producer-v1"
       key.serializer: "org.apache.kafka.common.serialization.VoidSerializer"
       value.serializer: "ru.yandex.practicum.kafka.serializer.GeneralAvroSerializer"
 
   user-actions-consumer:
     properties:
       bootstrap.servers: "localhost:9092"
-      group.id: "stats-user-actions-consumers-v1"
+      group.id: "stats-aggregator-user-actions-consumers-v1"
       key.deserializer: "org.apache.kafka.common.serialization.VoidDeserializer"
       value.deserializer: "ru.yandex.practicum.kafka.serializer.UserActionDeserializer"
 

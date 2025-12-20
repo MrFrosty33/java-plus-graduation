@@ -26,7 +26,7 @@ kafka-analyzer:
   user-actions-consumer:
     properties:
       bootstrap.servers: "localhost:9092"
-      group.id: "stats-user-actions-consumers-v1"
+      group.id: "stats-analyzer-user-actions-consumers-v1"
       key.deserializer: "org.apache.kafka.common.serialization.VoidDeserializer"
       value.deserializer: "ru.yandex.practicum.kafka.serializer.UserActionDeserializer"
 
@@ -41,7 +41,7 @@ kafka-analyzer:
   events-similarity-consumer:
     properties:
       bootstrap.servers: "localhost:9092"
-      group.id: "stats-events-similarity-consumers-v1"
+      group.id: "stats-analyzer-events-similarity-consumers-v1"
       key.deserializer: "org.apache.kafka.common.serialization.VoidDeserializer"
       value.deserializer: "ru.yandex.practicum.kafka.serializer.EventsSimilarityDeserializer"
 
