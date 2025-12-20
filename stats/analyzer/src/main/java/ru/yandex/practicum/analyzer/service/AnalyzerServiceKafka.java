@@ -45,6 +45,7 @@ public class AnalyzerServiceKafka {
                     existingInteraction.get().setTimestamp(
                             LocalDateTime.ofInstant(avro.getTimestamp(), ZoneId.systemDefault()));
 
+                    interactionRepository.save(existingInteraction.get());
                     log.trace("{}: interaction was updated: {}", className, existingInteraction.get());
                 }
             } else {
@@ -78,6 +79,7 @@ public class AnalyzerServiceKafka {
                 existingSimilarity.get().setSimilarity(avro.getScore());
                 existingSimilarity.get().setTimestamp(LocalDateTime.now());
 
+                similarityRepository.save(existingSimilarity.get());
                 log.trace("{}: similarity was updated: {}", className, existingSimilarity.get());
             } else {
                 Similarity similarity = Similarity.builder()
