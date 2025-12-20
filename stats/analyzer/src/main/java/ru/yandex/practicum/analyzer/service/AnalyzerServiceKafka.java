@@ -35,6 +35,7 @@ public class AnalyzerServiceKafka {
     )
     public void consumeUserActions(UserActionAvro avro) {
         try {
+            //todo по какой-то причине этот метод вообще не вызывается, хотя collector отправляет в топик данные
             log.trace("{}: consumeUserActions() polled UserActionAvro: {}", className, jsonMapper.writeValueAsString(avro));
             Optional<Interaction> existingInteraction =
                     interactionRepository.findByUserIdAndEventId(avro.getUserId(), avro.getEventId());

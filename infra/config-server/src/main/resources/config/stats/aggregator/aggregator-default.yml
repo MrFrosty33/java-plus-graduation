@@ -14,6 +14,9 @@ topics:
   userActions: "stats.user-actions.v1"
   eventsSimilarity: "stats.events-similarity.v1"
 
+nearest-neighbours:
+  value: 20
+
 action-weights:
   view: 0.4
   register: 0.8
