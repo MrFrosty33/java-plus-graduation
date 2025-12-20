@@ -67,28 +67,65 @@ public class AnalyzerServiceImpl implements AnalyzerService {
                         .collect(Collectors.toList())
         );
 
+        // старый вариант
+//        Set<Long> notInteractedEvents = similarEvents.stream()
+//                // сортируем по коэффиценту похожести, от большего к меньшему
+//                .sorted(Comparator.comparing(Similarity::getSimilarity).reversed())
+//                .peek(similarity -> {
+//                    log.trace("{}: getRecommendationsForUser() -> value of notInteractedEvents after sort: {}", className, similarity);
+//                })
+//                // ограничиваем выборку
+//                .limit(request.getMaxResults())
+//                .peek(similarity -> {
+//                    log.trace("{}: getRecommendationsForUser() -> value of notInteractedEvents after limit: {}", className, similarity);
+//                })
+//                // берём все айдишники мероприятий, будь то A или B
+//                .flatMap(similarity -> Stream.of(similarity.getEventIdA(), similarity.getEventIdB()))
+//                .peek(similarity -> {
+//                    log.trace("{}: getRecommendationsForUser() -> value of notInteractedEvents after flatMap: {}", className, similarity);
+//                })
+//                // отфильтровываем уже просмотренные
+//                .filter(id -> !alreadyWatchedEvents.contains(id))
+//                .peek(similarity -> {
+//                    log.trace("{}: getRecommendationsForUser() -> value of notInteractedEvents after filter: {}", className, similarity);
+//                })
+//                .collect(Collectors.toSet());
+
         Set<Long> notInteractedEvents = similarEvents.stream()
-                // сортируем по коэффиценту похожести, от большего к меньшему
-                .sorted(Comparator.comparing(Similarity::getSimilarity).reversed())
-                .peek(similarity -> {
-                    log.trace("{}: getRecommendationsForUser() -> value of notInteractedEvents after sort: {}", className, similarity);
-                })
-                // ограничиваем выборку
-                .limit(request.getMaxResults())
-                .peek(similarity -> {
-                    log.trace("{}: getRecommendationsForUser() -> value of notInteractedEvents after limit: {}", className, similarity);
-                })
-                // берём все айдишники мероприятий, будь то A или B
-                .flatMap(similarity -> Stream.of(similarity.getEventIdA(), similarity.getEventIdB()))
+                // преобразовываем схожести в кандидатов
+                .flatMap(similarity -> Stream.of(
+                        Map.entry(similarity.getEventIdA(), similarity.getSimilarity()),
+                        Map.entry(similarity.getEventIdB(), similarity.getSimilarity())
+                ))
                 .peek(similarity -> {
                     log.trace("{}: getRecommendationsForUser() -> value of notInteractedEvents after flatMap: {}", className, similarity);
                 })
-                // отфильтровываем уже просмотренные
-                .filter(id -> !alreadyWatchedEvents.contains(id))
+                // отсеиваем просмотренные
+                .filter(e -> !alreadyWatchedEvents.contains(e.getKey()))
                 .peek(similarity -> {
                     log.trace("{}: getRecommendationsForUser() -> value of notInteractedEvents after filter: {}", className, similarity);
                 })
+                // берём максимальную схожесть для события
+                .collect(Collectors.toMap(
+                        Map.Entry::getKey,
+                        Map.Entry::getValue,
+                        Double::max
+                ))
+                .entrySet().stream()
+                // сортируем
+                .sorted(Map.Entry.<Long, Double>comparingByValue().reversed())
+                .peek(similarity -> {
+                    log.trace("{}: getRecommendationsForUser() -> value of notInteractedEvents after sort: {}", className, similarity);
+                })
+                // ограничиваем
+                .limit(request.getMaxResults())
+                .peek(similarity -> {
+                    log.trace("{}: getRecommendationsForUser() -> value of notInteractedEvents after flatMap: {}", className, similarity);
+                })
+                // берём ключи и собираем в сет
+                .map(Map.Entry::getKey)
                 .collect(Collectors.toSet());
+
 
         // K является константой, берётся из конфига. Наставник посоветовал задать 20.
         int K = nearestNeighbours.getValue(); // количество ближайших соседей
@@ -157,6 +194,10 @@ public class AnalyzerServiceImpl implements AnalyzerService {
                                 }
                                 return alreadyWatchedEvents.contains(neighborId);
                             })
+                            // сортируем по убыванию похожести
+                            .sorted(Comparator.comparing(Similarity::getSimilarity).reversed())
+                            // берём K ближайших соседей
+                            .limit(K)
                             .toList();
 
                     // сумма взвешенных оценок
