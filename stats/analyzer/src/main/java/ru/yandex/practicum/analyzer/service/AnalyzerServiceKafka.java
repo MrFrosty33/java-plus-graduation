@@ -52,7 +52,6 @@ public class AnalyzerServiceKafka {
             if (existingInteraction.isPresent()) {
                 if (existingInteraction.get().getRating() < rating) {
                     existingInteraction.get().setRating(rating);
-                    //todo вопрос, надо ли обновлять ts
                     existingInteraction.get().setTimestamp(
                             LocalDateTime.ofInstant(avro.getTimestamp(), ZoneId.systemDefault()));
 
@@ -86,7 +85,6 @@ public class AnalyzerServiceKafka {
 
             if (existingSimilarity.isPresent()) {
                 existingSimilarity.get().setSimilarity(avro.getScore());
-                //todo вопрос, надо ли обновлять ts
                 existingSimilarity.get().setTimestamp(LocalDateTime.now());
 
                 log.trace("{}: similarity was updated: {}", className, existingSimilarity.get());

@@ -13,6 +13,9 @@ grpc:
 topics:
   userActions: "stats.user-actions.v1"
 
+nearest-neighbours:
+  value: 20
+
 kafka-analyzer:
   user-actions-consumer:
     properties:

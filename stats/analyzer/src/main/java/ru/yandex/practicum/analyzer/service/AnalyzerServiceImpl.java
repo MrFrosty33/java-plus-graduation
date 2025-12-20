@@ -7,6 +7,7 @@ import ru.practicum.ewm.stats.proto.InteractionsCountRequestProto;
 import ru.practicum.ewm.stats.proto.RecommendedEventProto;
 import ru.practicum.ewm.stats.proto.SimilarEventsRequestProto;
 import ru.practicum.ewm.stats.proto.UserPredictionsRequestProto;
+import ru.yandex.practicum.analyzer.config.NearestNeighbours;
 import ru.yandex.practicum.analyzer.model.Interaction;
 import ru.yandex.practicum.analyzer.model.Similarity;
 import ru.yandex.practicum.analyzer.repository.InteractionRepository;
@@ -27,6 +28,7 @@ import java.util.stream.Stream;
 public class AnalyzerServiceImpl implements AnalyzerService {
     private final InteractionRepository interactionRepository;
     private final SimilarityRepository similarityRepository;
+    private final NearestNeighbours nearestNeighbours;
 
     private final String className = this.getClass().getSimpleName();
 
@@ -88,8 +90,8 @@ public class AnalyzerServiceImpl implements AnalyzerService {
                 })
                 .collect(Collectors.toSet());
 
-        // K является константой, наставник посоветовал задать 20.
-        int K = 20; // количество ближайших соседей
+        // K является константой, берётся из конфига. Наставник посоветовал задать 20.
+        int K = nearestNeighbours.getValue(); // количество ближайших соседей
         Map<Long, List<Similarity>> nearestNeighbors = new HashMap<>();
 
         for (Interaction interaction : interactionsForUser) {
