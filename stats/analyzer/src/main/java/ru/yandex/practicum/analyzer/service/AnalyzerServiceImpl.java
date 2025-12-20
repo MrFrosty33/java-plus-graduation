@@ -32,6 +32,8 @@ public class AnalyzerServiceImpl implements AnalyzerService {
 
     private final String className = this.getClass().getSimpleName();
 
+    //todo возможно стоит добавить логирование trace всякого барахла
+
     @Override
     public Stream<RecommendedEventProto> getRecommendationsForUser(UserPredictionsRequestProto request) {
         List<Interaction> interactionsForUser = interactionRepository.findByUserId(request.getUserId());
@@ -313,7 +315,9 @@ public class AnalyzerServiceImpl implements AnalyzerService {
 
     @Override
     public Stream<RecommendedEventProto> getInteractionsCount(InteractionsCountRequestProto request) {
+        log.trace("{}: request содержит следующий айдишники: {}", className, request.getEventIdList());
         List<Interaction> interactions = interactionRepository.findByEventIdIn(request.getEventIdList());
+        log.trace("{}: нашел следующие interactions: {}", className, interactions);
 
         // группируем по eventId и считаем сумму всех rating
         Map<Long, Double> eventRatingMap = interactions.stream()

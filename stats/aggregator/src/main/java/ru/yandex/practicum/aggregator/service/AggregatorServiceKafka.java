@@ -239,6 +239,4 @@ public class AggregatorServiceKafka {
         // чтобы не ругалось на одинаковые сообщения в логах вынес сюда
         log.warn("{}: error processing avroMessage to JSON: {}", className, e.getMessage());
     }
-
-    //todo в тестах analyzer возможно request-service или где ещё не отправляются сообщения
 }

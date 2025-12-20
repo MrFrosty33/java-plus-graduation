@@ -16,6 +16,11 @@ topics:
 nearest-neighbours:
   value: 20
 
+action-weights:
+  view: 0.4
+  register: 0.8
+  like: 1.0
+
 kafka-analyzer:
   user-actions-consumer:
     properties:

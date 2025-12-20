@@ -5,8 +5,10 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.stereotype.Service;
+import ru.practicum.ewm.stats.avro.ActionTypeAvro;
 import ru.practicum.ewm.stats.avro.EventSimilarityAvro;
 import ru.practicum.ewm.stats.avro.UserActionAvro;
+import ru.yandex.practicum.analyzer.config.ActionWeightConfig;
 import ru.yandex.practicum.analyzer.model.Interaction;
 import ru.yandex.practicum.analyzer.model.Similarity;
 import ru.yandex.practicum.analyzer.repository.InteractionRepository;
@@ -23,6 +25,7 @@ public class AnalyzerServiceKafka {
     private final String className = this.getClass().getSimpleName();
     private final InteractionRepository interactionRepository;
     private final SimilarityRepository similarityRepository;
+    private final ActionWeightConfig weightConfig;
 
     private final JsonMapper jsonMapper;
 
@@ -36,18 +39,7 @@ public class AnalyzerServiceKafka {
             Optional<Interaction> existingInteraction =
                     interactionRepository.findByUserIdAndEventId(avro.getUserId(), avro.getEventId());
 
-            Double rating = 0.0;
-            switch (avro.getActionType()) {
-                case VIEW -> {
-                    rating = 0.4;
-                }
-                case REGISTER -> {
-                    rating = 0.8;
-                }
-                case LIKE -> {
-                    rating = 1.0;
-                }
-            }
+            Double rating = getActionWeight(avro.getActionType());
 
             if (existingInteraction.isPresent()) {
                 if (existingInteraction.get().getRating() < rating) {
@@ -102,5 +94,13 @@ public class AnalyzerServiceKafka {
         } catch (Exception e) {
             log.warn("{}: exception in consumeEventSimilarity(): ", className, e);
         }
+    }
+
+    private double getActionWeight(ActionTypeAvro action) {
+        return switch (action) {
+            case VIEW -> weightConfig.getView();
+            case REGISTER -> weightConfig.getRegister();
+            case LIKE -> weightConfig.getLike();
+        };
     }
 }
