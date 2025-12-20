@@ -13,7 +13,7 @@ import ru.practicum.ewm.stats.proto.SimilarEventsRequestProto;
 import ru.practicum.ewm.stats.proto.UserPredictionsRequestProto;
 import ru.yandex.practicum.analyzer.service.AnalyzerService;
 
-import java.util.stream.Stream;
+import java.util.List;
 
 @Slf4j
 @GrpcService
@@ -26,7 +26,8 @@ public class AnalyzerController extends RecommendationsControllerGrpc.Recommenda
     public void getRecommendationsForUser(UserPredictionsRequestProto request, StreamObserver<RecommendedEventProto> responseObserver) {
         log.trace("{}: getRecommendationsForUser() call with UserPredictionsRequestProto: {}", className, request);
 
-        try (Stream<RecommendedEventProto> result = service.getRecommendationsForUser(request)) {
+        try {
+            List<RecommendedEventProto> result = service.getRecommendationsForUser(request);
             result.forEach(responseObserver::onNext);
             responseObserver.onCompleted();
         } catch (Exception e) {
@@ -42,7 +43,8 @@ public class AnalyzerController extends RecommendationsControllerGrpc.Recommenda
     public void getSimilarEvents(SimilarEventsRequestProto request, StreamObserver<RecommendedEventProto> responseObserver) {
         log.trace("{}: getSimilarEvents() call with SimilarEventsRequestProto: {}", className, request);
 
-        try (Stream<RecommendedEventProto> result = service.getSimilarEvents(request)) {
+        try {
+            List<RecommendedEventProto> result = service.getSimilarEvents(request);
             result.forEach(responseObserver::onNext);
             responseObserver.onCompleted();
         } catch (Exception e) {
@@ -58,7 +60,8 @@ public class AnalyzerController extends RecommendationsControllerGrpc.Recommenda
     public void getInteractionsCount(InteractionsCountRequestProto request, StreamObserver<RecommendedEventProto> responseObserver) {
         log.trace("{}: getInteractionsCount() call with InteractionsCountRequestProto: {}", className, request);
 
-        try (Stream<RecommendedEventProto> result = service.getInteractionsCount(request)) {
+        try {
+            List<RecommendedEventProto> result = service.getInteractionsCount(request);
             result.forEach(responseObserver::onNext);
             responseObserver.onCompleted();
         } catch (Exception e) {

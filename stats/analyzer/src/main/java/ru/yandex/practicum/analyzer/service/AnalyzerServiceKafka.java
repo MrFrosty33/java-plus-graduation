@@ -69,8 +69,6 @@ public class AnalyzerServiceKafka {
     )
     public void consumeEventSimilarity(EventSimilarityAvro avro) {
         try {
-            //todo лучше логировать по полям, будет меньше мусора в логах и jsonMapper можно убрать будет
-            // тут и в aggregator, и в collector
             log.trace("{}: consumeEventSimilarity() polled EventSimilarityAvro: (eventA={}, eventB={}, score={}, timestamp={})",
                     className, avro.getEventA(), avro.getEventB(), avro.getScore(), avro.getTimestamp());
             Optional<Similarity> existingSimilarity =

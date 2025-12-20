@@ -33,14 +33,13 @@ public class AnalyzerServiceImpl implements AnalyzerService {
     private final String className = this.getClass().getSimpleName();
 
     //todo возможно стоит добавить логирование trace всякого барахла
-    //todo score считается неверно :(((((
 
     @Override
-    public Stream<RecommendedEventProto> getRecommendationsForUser(UserPredictionsRequestProto request) {
+    public List<RecommendedEventProto> getRecommendationsForUser(UserPredictionsRequestProto request) {
         List<Interaction> interactionsForUser = interactionRepository.findByUserId(request.getUserId());
         // если не было взаимодействий, то и рекомендовать пока что нечего
         if (interactionsForUser.isEmpty()) {
-            return Stream.empty();
+            return List.of();
         }
 
         // сортируем и ограничиваем список взаимодействий
@@ -243,8 +242,10 @@ public class AnalyzerServiceImpl implements AnalyzerService {
                             .setEventId(newEventId)
                             .setScore(predictedRating)
                             .build();
-                });
+                })
+                .toList();
     }
+
 
     private Set<Long> findNeighborEventIds(Map<Long, List<Similarity>> nearestNeighbors) {
         return nearestNeighbors.values().stream()
@@ -268,7 +269,7 @@ public class AnalyzerServiceImpl implements AnalyzerService {
     }
 
     @Override
-    public Stream<RecommendedEventProto> getSimilarEvents(SimilarEventsRequestProto request) {
+    public List<RecommendedEventProto> getSimilarEvents(SimilarEventsRequestProto request) {
         List<Similarity> similarEvents = similarityRepository.findByEventIdAOrEventIdB(request.getEventId());
         List<Interaction> interactionsForUser = interactionRepository.findByUserId(request.getUserId());
 
@@ -311,11 +312,15 @@ public class AnalyzerServiceImpl implements AnalyzerService {
                                 .build();
                     }
                 })
-                .peek(proto -> log.trace("{}: result of getSimilarEvents() mapped toRecommendedEventProto : {}", className, proto));
+                .peek(proto -> log.trace("{}: result of getSimilarEvents() mapped toRecommendedEventProto : {}", className, proto))
+                .toList();
+
     }
 
     @Override
-    public Stream<RecommendedEventProto> getInteractionsCount(InteractionsCountRequestProto request) {
+    public List<RecommendedEventProto> getInteractionsCount(InteractionsCountRequestProto request) {
+        // получает идентификаторы мероприятий и возвращает их поток
+        // с суммой максимальных весов действий каждого пользователя с этими мероприятиями:
         log.trace("{}: request содержит следующий айдишники: {}", className, request.getEventIdList());
         List<Interaction> interactions = interactionRepository.findByEventIdIn(request.getEventIdList());
         log.trace("{}: нашел следующие interactions: {}", className, interactions);
@@ -334,6 +339,7 @@ public class AnalyzerServiceImpl implements AnalyzerService {
                         .setScore(entry.getValue())
                         .build()
                 )
-                .peek(proto -> log.trace("{}: result of getInteractionsCount: {}", className, proto));
+                .peek(proto -> log.trace("{}: result of getInteractionsCount: {}", className, proto))
+                .toList();
     }
 }
