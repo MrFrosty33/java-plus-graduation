@@ -32,8 +32,6 @@ public class AnalyzerServiceImpl implements AnalyzerService {
 
     private final String className = this.getClass().getSimpleName();
 
-    //todo возможно стоит добавить логирование trace всякого барахла
-
     @Override
     public List<RecommendedEventProto> getRecommendationsForUser(UserPredictionsRequestProto request) {
         List<Interaction> interactionsForUser = interactionRepository.findByUserId(request.getUserId());
@@ -69,30 +67,7 @@ public class AnalyzerServiceImpl implements AnalyzerService {
                         .collect(Collectors.toList())
         );
 
-        // старый вариант
-//        Set<Long> notInteractedEvents = similarEvents.stream()
-//                // сортируем по коэффиценту похожести, от большего к меньшему
-//                .sorted(Comparator.comparing(Similarity::getSimilarity).reversed())
-//                .peek(similarity -> {
-//                    log.trace("{}: getRecommendationsForUser() -> value of notInteractedEvents after sort: {}", className, similarity);
-//                })
-//                // ограничиваем выборку
-//                .limit(request.getMaxResults())
-//                .peek(similarity -> {
-//                    log.trace("{}: getRecommendationsForUser() -> value of notInteractedEvents after limit: {}", className, similarity);
-//                })
-//                // берём все айдишники мероприятий, будь то A или B
-//                .flatMap(similarity -> Stream.of(similarity.getEventIdA(), similarity.getEventIdB()))
-//                .peek(similarity -> {
-//                    log.trace("{}: getRecommendationsForUser() -> value of notInteractedEvents after flatMap: {}", className, similarity);
-//                })
-//                // отфильтровываем уже просмотренные
-//                .filter(id -> !alreadyWatchedEvents.contains(id))
-//                .peek(similarity -> {
-//                    log.trace("{}: getRecommendationsForUser() -> value of notInteractedEvents after filter: {}", className, similarity);
-//                })
-//                .collect(Collectors.toSet());
-
+        // список айдишников мероприятий, с которыми не было ещё взаимодействий
         Set<Long> notInteractedEvents = similarEvents.stream()
                 // преобразовываем схожести в кандидатов
                 .flatMap(similarity -> Stream.of(
@@ -171,12 +146,14 @@ public class AnalyzerServiceImpl implements AnalyzerService {
 
         // id соседних мероприятий
         Set<Long> neighborEventIds = findNeighborEventIds(nearestNeighbors);
+        log.trace("{}: getRecommendationsForUser() -> value of neighborEventIds: {}", className, neighborEventIds);
 
         // мапа событие - оценка
         Map<Long, Double> neighborRatingMap = interactionRepository
                 .findByUserIdAndEventIdIn(request.getUserId(), new ArrayList<>(neighborEventIds))
                 .stream()
                 .collect(Collectors.toMap(Interaction::getEventId, Interaction::getRating));
+        log.trace("{}: getRecommendationsForUser() -> value of neighborRatingMap: {}", className, neighborRatingMap);
 
 
         // чтобы использовать в stream, должно быть final / effectively final
@@ -312,18 +289,17 @@ public class AnalyzerServiceImpl implements AnalyzerService {
                                 .build();
                     }
                 })
-                .peek(proto -> log.trace("{}: result of getSimilarEvents() mapped toRecommendedEventProto : {}", className, proto))
+                // логируем в одну строку
+                .peek(proto -> log.trace("{}: result of getSimilarEvents() mapped toRecommendedEventProto : {}", className,
+                        proto.toString().replace("\n", " ")))
                 .toList();
 
     }
 
     @Override
     public List<RecommendedEventProto> getInteractionsCount(InteractionsCountRequestProto request) {
-        // получает идентификаторы мероприятий и возвращает их поток
-        // с суммой максимальных весов действий каждого пользователя с этими мероприятиями:
-        log.trace("{}: request содержит следующий айдишники: {}", className, request.getEventIdList());
         List<Interaction> interactions = interactionRepository.findByEventIdIn(request.getEventIdList());
-        log.trace("{}: нашел следующие interactions: {}", className, interactions);
+        log.trace("{}: getInteractionsCount found interactions: {}", className, interactions);
 
         // группируем по eventId и считаем сумму всех rating
         Map<Long, Double> eventRatingMap = interactions.stream()
@@ -339,7 +315,10 @@ public class AnalyzerServiceImpl implements AnalyzerService {
                         .setScore(entry.getValue())
                         .build()
                 )
-                .peek(proto -> log.trace("{}: result of getInteractionsCount: {}", className, proto))
+                .sorted(Comparator.comparing(RecommendedEventProto::getScore).reversed())
+                // логируем в одну строку
+                .peek(proto -> log.trace("{}: result of getInteractionsCount: {}", className,
+                        proto.toString().replace("\n", " ")))
                 .toList();
     }
 }
