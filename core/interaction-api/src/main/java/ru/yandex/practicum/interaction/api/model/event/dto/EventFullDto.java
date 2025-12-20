@@ -41,5 +41,7 @@ public class EventFullDto {
     private boolean requestModeration;
     private EventState state;
     private String title;
-    private Double rating;
+    // я это поле переименовал в rating, что, как по мне, логичнее, чем views, поэтому тесты ругаются
+    // пока верну обратно в views
+    private Double views;
 }

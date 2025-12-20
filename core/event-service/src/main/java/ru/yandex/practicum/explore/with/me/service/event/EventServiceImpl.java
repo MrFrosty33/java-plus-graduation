@@ -85,7 +85,7 @@ public class EventServiceImpl implements ExistenceValidator<Event>, EventService
         event.setState(EventState.PENDING);
         Event eventSaved = eventRepository.save(event);
         EventFullDto eventFullDto = eventMapper.toFullDto(eventSaved);
-        eventFullDto.setRating(0.0);
+        eventFullDto.setViews(0.0);
 
         log.info("{}: result of createEvent(): {}", className, eventFullDto);
         return eventFullDto;
@@ -280,6 +280,7 @@ public class EventServiceImpl implements ExistenceValidator<Event>, EventService
                 .setUserId(userId)
                 .setActionType(ActionTypeProto.ACTION_VIEW)
                 .build();
+        //todo возможно тут не может найти collector и падает один тест
         collectorClient.collectUserAction(actionProto);
         log.info("{}: sent UserActionProto: {} to collector", className, actionProto);
 
