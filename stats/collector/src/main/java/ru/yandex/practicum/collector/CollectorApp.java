@@ -10,6 +10,4 @@ public class CollectorApp {
     public static void main(String[] args) {
         SpringApplication.run(CollectorApp.class, args);
     }
-
-    //todo обновить README.md - добавить новаые маппингы, обновить папки конфигов, технологии
 }

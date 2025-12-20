@@ -25,6 +25,8 @@ provides categories and compilations.
 - **MapStruct** - Implementation of mappings
 - **Maven** – Project modules and dependency management
 - **Docker / Docker Compose** – Containerized local deployment
+- **Apache Kafka / Spring Kafka** – Messaging system for building event-driven microservices and asynchronous
+  communication
 
 ---
 
@@ -34,8 +36,11 @@ provides categories and compilations.
   - **docker-compose/stats-db**
   - **docker-compose/event-db**
   - **docker-compose/microservices-db**
+  - **docker-compose/kafka**
+  - **docker-compose/kafka-init-topics**
   - **`stats-db` and `event-db` are initialized using `schema.sql` located in `/resources/schema.sql` of each module**
   - **`microservices-db` is initialized using `schema.sql` located in `/db/schema.sql`**
+  - **`kafka` is initialized using `kafka-init-topics` container**
 
 ---
 
@@ -47,7 +52,9 @@ provides categories and compilations.
 ---
 
 - **Start applications**
-  - **stats/stats-server**
+  - **stats/collector**
+  - **stats/aggregator**
+  - **stats/analyzer**
   - **core/user-service**
   - **core/request-service**
   - **core/comment-service**
@@ -130,9 +137,13 @@ provides categories and compilations.
 
 - **Event Management (Public)**
     - GET `/events` -> retrieve a list of public events with optional filters(`text`, `categories`, `paid`, date
-      `rangeStart`, `rangeEnd`, `availability`, `sort`), and pagination (`from`, `size`); **tracks access statistics**
-    - GET `/events/{eventId}` -> get full details of a specific public event by ID; **tracks access statistics**
+      `rangeStart`, `rangeEnd`, `availability`, `sort`), and pagination (`from`, `size`)
+    - GET `/events/recommendations` -> retrieve a list of recommended events with optional filter(`size`)
+    - GET `/events/{eventId}` -> get full details of a specific public event by ID; **tracks user access statistics via
+      gRPC using the `X-EWM-USER-ID` header**
     - GET `/events/{eventId}/comments` -> retrieve paginated comments for a specific event (`from`, `size`)
+    - PUT `/events/{eventId}/like` -> send like to a specific event; **sends user action info to the Collector service
+      via gRPC using the `X-EWM-USER-ID` header**
 
 ---
 
@@ -148,7 +159,8 @@ provides categories and compilations.
       requests by IDs
 - **Participation request Management (Private)**
     - GET `/users/{userId}/requests` -> retrieve all participation requests made by the user
-    - POST `/users/{userId}/requests?eventId=...` -> create a new participation request for a specific event
+  - POST `/users/{userId}/requests?eventId=...` -> create a new participation request for a specific event; **sends user
+    action info to the Collector service via gRPC using received userId**
     - PATCH `/users/{userId}/requests/{requestId}/cancel` -> cancel a participation request by ID for the user
 
 ---
