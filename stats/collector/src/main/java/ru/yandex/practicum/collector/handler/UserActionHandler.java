@@ -29,7 +29,6 @@ public class UserActionHandler {
                 .build();
 
         producer.sendAvro(topic, userActionAvro);
-        log.info("{}: UserActionAvro: {} sent to kafka", className, userActionAvro);
     }
 
     private ActionTypeAvro mapActionType(ActionTypeProto actionType) {
