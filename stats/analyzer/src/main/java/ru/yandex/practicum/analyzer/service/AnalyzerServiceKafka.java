@@ -1,6 +1,5 @@
 package ru.yandex.practicum.analyzer.service;
 
-import com.fasterxml.jackson.databind.json.JsonMapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.kafka.annotation.KafkaListener;
@@ -27,16 +26,14 @@ public class AnalyzerServiceKafka {
     private final SimilarityRepository similarityRepository;
     private final ActionWeightConfig weightConfig;
 
-    private final JsonMapper jsonMapper;
-
     @KafkaListener(
             topics = "#{@topicConfig.userActions}",
             containerFactory = "userActionKafkaListenerContainerFactory"
     )
     public void consumeUserActions(UserActionAvro avro) {
         try {
-            //todo по какой-то причине этот метод вообще не вызывается, хотя collector отправляет в топик данные
-            log.trace("{}: consumeUserActions() polled UserActionAvro: {}", className, jsonMapper.writeValueAsString(avro));
+            log.trace("{}: consumeUserActions() polled UserActionAvro: (userId={}, eventId={}, actionType={}, timestamp={})",
+                    className, avro.getUserId(), avro.getEventId(), avro.getActionType(), avro.getTimestamp());
             Optional<Interaction> existingInteraction =
                     interactionRepository.findByUserIdAndEventId(avro.getUserId(), avro.getEventId());
 
@@ -72,7 +69,10 @@ public class AnalyzerServiceKafka {
     )
     public void consumeEventSimilarity(EventSimilarityAvro avro) {
         try {
-            log.trace("{}: consumeEventSimilarity() polled EventSimilarityAvro: {}", className, jsonMapper.writeValueAsString(avro));
+            //todo лучше логировать по полям, будет меньше мусора в логах и jsonMapper можно убрать будет
+            // тут и в aggregator, и в collector
+            log.trace("{}: consumeEventSimilarity() polled EventSimilarityAvro: (eventA={}, eventB={}, score={}, timestamp={})",
+                    className, avro.getEventA(), avro.getEventB(), avro.getScore(), avro.getTimestamp());
             Optional<Similarity> existingSimilarity =
                     similarityRepository.findByEventIdAAndEventIdB(avro.getEventA(), avro.getEventB());
 

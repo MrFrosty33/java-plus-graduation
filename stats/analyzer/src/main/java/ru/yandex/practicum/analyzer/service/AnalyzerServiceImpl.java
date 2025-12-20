@@ -33,6 +33,7 @@ public class AnalyzerServiceImpl implements AnalyzerService {
     private final String className = this.getClass().getSimpleName();
 
     //todo возможно стоит добавить логирование trace всякого барахла
+    //todo score считается неверно :(((((
 
     @Override
     public Stream<RecommendedEventProto> getRecommendationsForUser(UserPredictionsRequestProto request) {

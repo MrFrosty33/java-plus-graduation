@@ -1,8 +1,5 @@
 package ru.yandex.practicum.aggregator.config;
 
-import com.fasterxml.jackson.databind.json.JsonMapper;
-import com.fasterxml.jackson.dataformat.avro.AvroModule;
-import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -35,13 +32,5 @@ public class AggregatorConfig {
         ConcurrentKafkaListenerContainerFactory<Void, UserActionAvro> factory = new ConcurrentKafkaListenerContainerFactory<>();
         factory.setConsumerFactory(userActionsConsumerFactory());
         return factory;
-    }
-
-    @Bean
-    public JsonMapper jsonMapper() {
-        JsonMapper result = new JsonMapper();
-        result.registerModule(new JavaTimeModule());
-        result.registerModule(new AvroModule());
-        return result;
     }
 }

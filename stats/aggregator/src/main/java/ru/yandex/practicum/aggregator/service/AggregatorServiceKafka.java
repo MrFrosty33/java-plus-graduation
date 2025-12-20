@@ -1,7 +1,5 @@
 package ru.yandex.practicum.aggregator.service;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.json.JsonMapper;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.avro.specific.SpecificRecordBase;
 import org.apache.kafka.clients.producer.KafkaProducer;
@@ -15,7 +13,6 @@ import ru.practicum.ewm.stats.avro.UserActionAvro;
 import ru.yandex.practicum.aggregator.config.ActionWeightConfig;
 import ru.yandex.practicum.aggregator.config.KafkaEventsSimilarityProducerConfig;
 import ru.yandex.practicum.aggregator.config.TopicConfig;
-import ru.yandex.practicum.aggregator.exception.JsonException;
 
 import java.time.Instant;
 import java.util.ArrayList;
@@ -30,8 +27,6 @@ import java.util.Optional;
 @Service
 public class AggregatorServiceKafka {
     private final String className = this.getClass().getSimpleName();
-
-    private final JsonMapper jsonMapper;
     private final KafkaProducer<Void, SpecificRecordBase> eventsSimilarityProducer;
     private final TopicConfig topicConfig;
     private final ActionWeightConfig weightConfig;
@@ -42,10 +37,8 @@ public class AggregatorServiceKafka {
     private final Map<Long, Map<Long, Double>> scalarResultMatrix = new HashMap<>();
 
 
-    public AggregatorServiceKafka(JsonMapper jsonMapper,
-                                  KafkaEventsSimilarityProducerConfig kafkaEventsSimilarityProducerConfig,
+    public AggregatorServiceKafka(KafkaEventsSimilarityProducerConfig kafkaEventsSimilarityProducerConfig,
                                   TopicConfig topicConfig, ActionWeightConfig weightConfig) {
-        this.jsonMapper = jsonMapper;
         this.topicConfig = topicConfig;
         this.weightConfig = weightConfig;
 
@@ -58,13 +51,11 @@ public class AggregatorServiceKafka {
         ProducerRecord<Void, SpecificRecordBase> record = new ProducerRecord<>(topic, avro);
         try {
             eventsSimilarityProducer.send(record);
-            log.trace("{}: sent EventSimilarityAvro to topic {}: {}", className, topic, jsonMapper.writeValueAsString(avro));
+            log.trace("{}: consumeEventSimilarity() polled EventSimilarityAvro: (eventA={}, eventB={}, score={}, timestamp={})",
+                    className, avro.getEventA(), avro.getEventB(), avro.getScore(), avro.getTimestamp());
         } catch (KafkaException e) {
             log.warn("{}: failed to send EventSimilarityAvro: {} with topic: {}", className, e.getMessage(), topic);
             throw e;
-        } catch (JsonProcessingException e) {
-            logJsonException(e);
-            throw new JsonException("Error processing avroMessage to JSON");
         }
     }
 
