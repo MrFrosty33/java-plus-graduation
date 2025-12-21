@@ -8,6 +8,11 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import ru.practicum.ewm.stats.proto.ActionTypeProto;
+import ru.practicum.ewm.stats.proto.InteractionsCountRequestProto;
+import ru.practicum.ewm.stats.proto.RecommendedEventProto;
+import ru.practicum.ewm.stats.proto.UserActionProto;
+import ru.practicum.ewm.stats.proto.UserPredictionsRequestProto;
 import ru.yandex.practicum.explore.with.me.mapper.EventMapper;
 import ru.yandex.practicum.explore.with.me.model.category.Category;
 import ru.yandex.practicum.explore.with.me.model.event.Event;
@@ -19,12 +24,12 @@ import ru.yandex.practicum.explore.with.me.model.event.dto.EventRequestStatusUpd
 import ru.yandex.practicum.explore.with.me.model.event.dto.EventShortDto;
 import ru.yandex.practicum.explore.with.me.model.event.dto.EventViewsParameters;
 import ru.yandex.practicum.explore.with.me.model.event.dto.NewEventDto;
+import ru.yandex.practicum.explore.with.me.model.event.dto.RecommendedEventDto;
 import ru.yandex.practicum.explore.with.me.model.event.dto.StatusUpdateRequest;
 import ru.yandex.practicum.explore.with.me.model.event.dto.UpdateEventUserAction;
 import ru.yandex.practicum.explore.with.me.model.event.dto.UpdateEventUserRequest;
 import ru.yandex.practicum.explore.with.me.repository.CategoryRepository;
 import ru.yandex.practicum.explore.with.me.repository.EventRepository;
-import ru.yandex.practicum.explore.with.me.stats.StatsGetter;
 import ru.yandex.practicum.interaction.api.exception.BadRequestException;
 import ru.yandex.practicum.interaction.api.exception.ConflictException;
 import ru.yandex.practicum.interaction.api.exception.NotFoundException;
@@ -39,16 +44,17 @@ import ru.yandex.practicum.interaction.api.model.request.ParticipationRequestDto
 import ru.yandex.practicum.interaction.api.model.request.ParticipationRequestStatus;
 import ru.yandex.practicum.interaction.api.model.user.UserDto;
 import ru.yandex.practicum.interaction.api.util.ExistenceValidator;
-import ru.yandex.practicum.stats.dto.ViewStats;
+import ru.yandex.practicum.stats.client.AnalyzerClient;
+import ru.yandex.practicum.stats.client.CollectorClient;
 
 import java.time.LocalDateTime;
-import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 @Service
 @RequiredArgsConstructor
@@ -61,8 +67,9 @@ public class EventServiceImpl implements ExistenceValidator<Event>, EventService
     private final CommentClient commentClient;
     private final CategoryRepository categoryRepository;
     private final EventMapper eventMapper;
-    private final StatsGetter statsGetter;
     private final RequestClient requestClient;
+    private final AnalyzerClient analyzerClient;
+    private final CollectorClient collectorClient;
 
     @Transactional
     @Override
@@ -78,7 +85,7 @@ public class EventServiceImpl implements ExistenceValidator<Event>, EventService
         event.setState(EventState.PENDING);
         Event eventSaved = eventRepository.save(event);
         EventFullDto eventFullDto = eventMapper.toFullDto(eventSaved);
-        eventFullDto.setViews(0L);
+        eventFullDto.setViews(0.0);
 
         log.info("{}: result of createEvent(): {}", className, eventFullDto);
         return eventFullDto;
@@ -89,10 +96,9 @@ public class EventServiceImpl implements ExistenceValidator<Event>, EventService
     public EventFullDto getPrivateEventById(long userId, long eventId) {
         Event event = getEventIfInitiatedByUser(userId, eventId);
         List<Event> events = List.of(event);
-        LocalDateTime startStats = event.getCreatedOn().truncatedTo(ChronoUnit.SECONDS);
-        LocalDateTime endStats = LocalDateTime.now().truncatedTo(ChronoUnit.SECONDS);
-        EventStatistics stats = getEventStatistics(events, startStats, endStats);
+        EventStatistics stats = getEventStatistics(events);
         EventFullDto result = eventMapper.toFullDtoWithStats(event, stats);
+        //todo заполнить rating через analyzer -> getInteractionsCount
         log.info("{}: result of getPrivateEventById(): {}", className, result);
         return result;
     }
@@ -157,10 +163,9 @@ public class EventServiceImpl implements ExistenceValidator<Event>, EventService
         }
         eventRepository.save(event);
         List<Event> events = List.of(event);
-        LocalDateTime startStats = event.getCreatedOn().truncatedTo(ChronoUnit.SECONDS);
-        LocalDateTime endStats = LocalDateTime.now().truncatedTo(ChronoUnit.SECONDS);
-        EventStatistics stats = getEventStatistics(events, startStats, endStats);
+        EventStatistics stats = getEventStatistics(events);
         EventFullDto result = eventMapper.toFullDtoWithStats(event, stats);
+        //todo заполнить rating через analyzer -> getInteractionsCount
         log.info("{}: result of updateEvent(): {}", className, result);
         return result;
     }
@@ -174,9 +179,7 @@ public class EventServiceImpl implements ExistenceValidator<Event>, EventService
         if (events.isEmpty()) {
             return List.of();
         }
-        LocalDateTime startStats = events.getFirst().getCreatedOn().truncatedTo(ChronoUnit.SECONDS);
-        LocalDateTime endStats = LocalDateTime.now().truncatedTo(ChronoUnit.SECONDS);
-        EventStatistics stats = getEventStatistics(events, startStats, endStats);
+        EventStatistics stats = getEventStatistics(events);
         List<EventShortDto> result = events.stream()
                 .map(event -> eventMapper.toShortDtoWithStats(event, stats))
                 .toList();
@@ -259,7 +262,7 @@ public class EventServiceImpl implements ExistenceValidator<Event>, EventService
 
     @Override
     @Transactional(readOnly = true)
-    public EventFullDto getPublicEventById(long eventId) {
+    public EventFullDto getPublicEventById(Long userId, long eventId) {
         //todo заполнять ещё и комментарии?
         Event event = eventRepository.findByIdAndState(eventId, EventState.PUBLISHED)
                 .orElseThrow(() -> {
@@ -268,11 +271,19 @@ public class EventServiceImpl implements ExistenceValidator<Event>, EventService
                             "Event with id=" + eventId + " and state=" + EventState.PUBLISHED + " was not found");
                 });
         List<Event> events = List.of(event);
-        LocalDateTime startStats = event.getCreatedOn().truncatedTo(ChronoUnit.SECONDS);
-        LocalDateTime endStats = LocalDateTime.now().truncatedTo(ChronoUnit.SECONDS);
-        EventStatistics stats = getEventStatistics(events, startStats, endStats);
+        EventStatistics stats = getEventStatistics(events);
         EventFullDto result = eventMapper.toFullDtoWithStats(event, stats);
         log.info("{}: result of getPublicEventById(): {}", className, result);
+
+        UserActionProto actionProto = UserActionProto.newBuilder()
+                .setEventId(eventId)
+                .setUserId(userId)
+                .setActionType(ActionTypeProto.ACTION_VIEW)
+                .build();
+        //todo возможно тут не может найти collector и падает один тест
+        collectorClient.collectUserAction(actionProto);
+        log.info("{}: sent UserActionProto: {} to collector", className, actionProto);
+
         return result;
     }
 
@@ -288,10 +299,9 @@ public class EventServiceImpl implements ExistenceValidator<Event>, EventService
                             "Event with id=" + eventId + " was not found");
                 });
         List<Event> events = List.of(event);
-        LocalDateTime startStats = event.getCreatedOn().truncatedTo(ChronoUnit.SECONDS);
-        LocalDateTime endStats = LocalDateTime.now().truncatedTo(ChronoUnit.SECONDS);
-        EventStatistics stats = getEventStatistics(events, startStats, endStats);
+        EventStatistics stats = getEventStatistics(events);
         EventFullDto result = eventMapper.toFullDtoWithStats(event, stats);
+        //todo заполнить rating через analyzer -> getInteractionsCount
         log.info("{}: result of getInternalEventById(): {}", className, result);
         return result;
     }
@@ -329,11 +339,7 @@ public class EventServiceImpl implements ExistenceValidator<Event>, EventService
             return List.of();
         }
 
-        LocalDateTime startStats = params.getRangeStart() != null ? params.getRangeStart().truncatedTo(ChronoUnit.SECONDS)
-                : events.getFirst().getCreatedOn().truncatedTo(ChronoUnit.SECONDS);
-        LocalDateTime endStats = LocalDateTime.now().truncatedTo(ChronoUnit.SECONDS);
-
-        EventStatistics stats = getEventStatistics(events, startStats, endStats);
+        EventStatistics stats = getEventStatistics(events);
         List<EventShortDto> result = events.stream()
                 .map(event -> eventMapper.toShortDtoWithStats(event, stats))
                 .toList();
@@ -342,17 +348,12 @@ public class EventServiceImpl implements ExistenceValidator<Event>, EventService
     }
 
     @Override
-    public Map<Long, Long> getEventViews(EventViewsParameters params) {
-        List<ViewStats> stats = statsGetter.getEventViewStats(params);
-        Map<Long, Long> views = new HashMap<>();
-        if (stats != null) {
-            for (ViewStats stat : stats) {
-                Long eventId = extractId(stat.getUri());
-                if (eventId != null) {
-                    views.put(eventId, stat.getHits());
-                }
-            }
-        }
+    public Map<Long, Double> getEventInteractions(EventViewsParameters params) {
+        InteractionsCountRequestProto requestProto = InteractionsCountRequestProto.newBuilder().build();
+        Stream<RecommendedEventProto> stats = analyzerClient.getInteractionsCount(requestProto);
+
+        Map<Long, Double> views = new HashMap<>();
+        stats.forEach(value -> views.put(value.getEventId(), value.getScore()));
         log.info("{}: result of getEventViews: {}", className, views);
         return views;
     }
@@ -368,6 +369,50 @@ public class EventServiceImpl implements ExistenceValidator<Event>, EventService
         );
         log.info("{}: result of getConfirmedRequests: {}", className, result);
         return result;
+    }
+
+    @Override
+    public List<RecommendedEventDto> getRecommendations(Long userId, int size) {
+        userClient.findById(userId);
+        UserPredictionsRequestProto requestProto = UserPredictionsRequestProto.newBuilder()
+                .setUserId(userId)
+                .setMaxResults(size)
+                .build();
+        Stream<RecommendedEventProto> recommendedEventStream = analyzerClient.getRecommendationsForUser(requestProto);
+
+        List<RecommendedEventDto> result = recommendedEventStream
+                .map(value -> new RecommendedEventDto(value.getEventId(), value.getScore()))
+                .toList();
+
+        log.info("{}: result of getRecommendations(): {}", className, result);
+        return result;
+    }
+
+    @Override
+    public void like(Long eventId, Long userId) {
+        Event event = eventRepository.findById(eventId).orElseThrow(() -> {
+            log.info("{}: event with id: {} not found", className, eventId);
+            return new NotFoundException("The required object was not found.", "Event with id=" + eventId + " was not found");
+        });
+        userClient.findById(userId);
+        EventStatistics eventStat = getEventStatistics(List.of(event));
+
+        // проверяем, существует и подтверждена ли заявка на посещение и прошло ли событие уже
+        if (!(requestClient.existsByRequesterIdAndEventIdAndStatus(userId, eventId, ParticipationRequestStatus.CONFIRMED)
+                && event.getEventDate().isBefore(LocalDateTime.now()))) {
+            log.warn("{}: user with id: {} attempted to like event with id: {} without participating in it", className, userId, eventId);
+            throw new BadRequestException("You can only like events you participated in", "Participation not found");
+        }
+
+        UserActionProto actionProto = UserActionProto.newBuilder()
+                .setEventId(eventId)
+                .setUserId(userId)
+                .setActionType(ActionTypeProto.ACTION_LIKE)
+                .build();
+        collectorClient.collectUserAction(actionProto);
+
+        log.info("{}: user with id: {} liked event with id: {}", className, userId, eventId);
+        log.info("{}: sent UserActionProto: {} to collector", className, actionProto);
     }
 
     private Event getEventIfInitiatedByUser(long userId, long eventId) {
@@ -394,15 +439,6 @@ public class EventServiceImpl implements ExistenceValidator<Event>, EventService
         });
     }
 
-    private Long extractId(String uri) {
-        try {
-            String[] parts = uri.split("/");
-            return Long.parseLong(parts[parts.length - 1]);
-        } catch (Exception e) {
-            return null;
-        }
-    }
-
     private Sort getSort(EventPublicSort sort) {
         if (sort == null) return Sort.unsorted();
         return switch (sort) {
@@ -421,17 +457,16 @@ public class EventServiceImpl implements ExistenceValidator<Event>, EventService
     }
 
     @Override
-    public EventStatistics getEventStatistics(List<Event> events, LocalDateTime start, LocalDateTime end) {
+    public EventStatistics getEventStatistics(List<Event> events) {
         if (events.isEmpty()) {
             return new EventStatistics(Map.of(), Map.of());
         }
 
         List<Long> eventIds = events.stream().map(Event::getId).toList();
         EventViewsParameters params = EventViewsParameters.builder()
-                .start(start)
-                .end(end)
-                .eventIds(eventIds).unique(true).build();
-        Map<Long, Long> viewStats = getEventViews(params);
+                .eventIds(eventIds)
+                .build();
+        Map<Long, Double> viewStats = getEventInteractions(params);
         Map<Long, Integer> confirmedRequests = getConfirmedRequests(eventIds);
         EventStatistics result = new EventStatistics(viewStats, confirmedRequests);
         log.info("{}: result of getEventStatistics(): {}", className, result);

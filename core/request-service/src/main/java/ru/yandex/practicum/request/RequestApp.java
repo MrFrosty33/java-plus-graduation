@@ -6,7 +6,8 @@ import org.springframework.boot.autoconfigure.domain.EntityScan;
 import org.springframework.boot.context.properties.ConfigurationPropertiesScan;
 import org.springframework.cloud.openfeign.EnableFeignClients;
 
-@SpringBootApplication(scanBasePackages = {"ru.yandex.practicum.request", "ru.yandex.practicum.interaction.api"})
+@SpringBootApplication(scanBasePackages = {"ru.yandex.practicum.request",
+        "ru.yandex.practicum.interaction.api", "ru.yandex.practicum.stats"})
 @EnableFeignClients(basePackages = "ru.yandex.practicum.interaction.api.feign")
 @ConfigurationPropertiesScan
 @EntityScan(basePackages = {

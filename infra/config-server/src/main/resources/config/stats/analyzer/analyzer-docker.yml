@@ -1,0 +1,73 @@
+logging:
+  level:
+    root: INFO
+    ru.yandex.practicum.analyzer: TRACE
+
+grpc:
+  server:
+    port: 59091
+    enableKeepAlive: true
+    keepAliveWithoutCalls: true
+    negotiationType: plaintext
+
+topics:
+  userActions: "stats.user-actions.v1"
+
+nearest-neighbours:
+  value: 20
+
+action-weights:
+  view: 0.4
+  register: 0.8
+  like: 1.0
+
+kafka-analyzer:
+  user-actions-consumer:
+    properties:
+      bootstrap.servers: "kafka:29092"
+      group.id: "stats-analyzer-user-actions-consumers-v1"
+      key.deserializer: "org.apache.kafka.common.serialization.VoidDeserializer"
+      value.deserializer: "ru.yandex.practicum.kafka.serializer.UserActionDeserializer"
+
+      max.poll.records: 100
+      fetch.max.bytes: 3072000
+      max.partition.fetch.bytes: 307200
+
+      auto.offset.reset: "latest"
+      isolation.level: "read_committed"
+      enable.auto.commit: false
+
+  events-similarity-consumer:
+    properties:
+      bootstrap.servers: "kafka:29092"
+      group.id: "stats-analyzer-events-similarity-consumers-v1"
+      key.deserializer: "org.apache.kafka.common.serialization.VoidDeserializer"
+      value.deserializer: "ru.yandex.practicum.kafka.serializer.EventsSimilarityDeserializer"
+
+      max.poll.records: 100
+      fetch.max.bytes: 3072000
+      max.partition.fetch.bytes: 307200
+
+      auto.offset.reset: "latest"
+      isolation.level: "read_committed"
+      enable.auto.commit: false
+
+spring:
+  sql:
+    init:
+      mode: always
+  datasource:
+    driver-class-name: org.postgresql.Driver
+    url: ${SPRING_DATASOURCE_URL}
+    username: ${SPRING_DATASOURCE_USERNAME}
+    password: ${SPRING_DATASOURCE_PASSWORD}
+  jpa:
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health, info, metrics

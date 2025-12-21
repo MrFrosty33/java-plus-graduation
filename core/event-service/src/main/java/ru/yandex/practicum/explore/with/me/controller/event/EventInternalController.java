@@ -13,7 +13,6 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 import ru.yandex.practicum.explore.with.me.service.event.EventService;
-import ru.yandex.practicum.explore.with.me.stats.StatsSaver;
 import ru.yandex.practicum.interaction.api.model.event.dto.EventFullDto;
 
 @RestController
@@ -24,13 +23,11 @@ import ru.yandex.practicum.interaction.api.model.event.dto.EventFullDto;
 public class EventInternalController {
     private final String className = this.getClass().getSimpleName();
     private final EventService service;
-    private final StatsSaver statsSaver;
 
     @GetMapping("/{eventId}")
     @ResponseStatus(HttpStatus.OK)
     public EventFullDto getEventById(@PathVariable @PositiveOrZero @NotNull Long eventId,
                                      HttpServletRequest request) {
-        statsSaver.save(request, className);
         log.trace("{}: getEventById() call with eventId: {}", className, eventId);
         return service.getInternalEventById(eventId);
     }

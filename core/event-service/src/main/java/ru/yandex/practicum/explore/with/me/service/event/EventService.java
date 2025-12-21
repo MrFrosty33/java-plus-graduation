@@ -8,12 +8,12 @@ import ru.yandex.practicum.explore.with.me.model.event.dto.EventRequestStatusUpd
 import ru.yandex.practicum.explore.with.me.model.event.dto.EventShortDto;
 import ru.yandex.practicum.explore.with.me.model.event.dto.EventViewsParameters;
 import ru.yandex.practicum.explore.with.me.model.event.dto.NewEventDto;
+import ru.yandex.practicum.explore.with.me.model.event.dto.RecommendedEventDto;
 import ru.yandex.practicum.explore.with.me.model.event.dto.UpdateEventUserRequest;
 import ru.yandex.practicum.interaction.api.model.comment.dto.CommentDto;
 import ru.yandex.practicum.interaction.api.model.event.dto.EventFullDto;
 import ru.yandex.practicum.interaction.api.model.request.ParticipationRequestDto;
 
-import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
 
@@ -24,13 +24,13 @@ public interface EventService {
 
     EventFullDto updateEvent(long userId, long eventId, UpdateEventUserRequest updateEvent);
 
-    EventFullDto getPublicEventById(long eventId);
+    EventFullDto getPublicEventById(Long userId, long eventId);
 
     EventFullDto getInternalEventById(long eventId);
 
     List<EventShortDto> getEventsByUser(long userId, int from, int count);
 
-    Map<Long, Long> getEventViews(EventViewsParameters params);
+    Map<Long, Double> getEventInteractions(EventViewsParameters params);
 
     List<ParticipationRequestDto> getEventParticipationRequestsByUser(long userId, long eventId);
 
@@ -41,7 +41,11 @@ public interface EventService {
 
     Map<Long, Integer> getConfirmedRequests(List<Long> eventIds);
 
-    EventStatistics getEventStatistics(List<Event> events, LocalDateTime startStats, LocalDateTime endStats);
+    EventStatistics getEventStatistics(List<Event> events);
 
     List<CommentDto> getCommentsByEvent(Long eventId, int from, int size);
+
+    List<RecommendedEventDto> getRecommendations(Long userId, int size);
+
+    void like(Long eventId, Long userId);
 }

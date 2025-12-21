@@ -14,9 +14,4 @@ public class UserApp {
     public static void main(String[] args) {
         SpringApplication.run(UserApp.class, args);
     }
-    //todo comment, category & compilation вроде как по желанию, можно пока не выносить
-
-    //todo 3) переносим какую-то свою функциональность
-
-    //todo не забыть добавлять руты
 }

@@ -1,6 +1,5 @@
 package ru.yandex.practicum.explore.with.me.controller.event;
 
-import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Positive;
 import jakarta.validation.constraints.PositiveOrZero;
@@ -11,6 +10,8 @@ import org.springframework.http.HttpStatus;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseStatus;
@@ -18,8 +19,8 @@ import org.springframework.web.bind.annotation.RestController;
 import ru.yandex.practicum.explore.with.me.model.event.EventPublicSort;
 import ru.yandex.practicum.explore.with.me.model.event.PublicEventParam;
 import ru.yandex.practicum.explore.with.me.model.event.dto.EventShortDto;
+import ru.yandex.practicum.explore.with.me.model.event.dto.RecommendedEventDto;
 import ru.yandex.practicum.explore.with.me.service.event.EventService;
-import ru.yandex.practicum.explore.with.me.stats.StatsSaver;
 import ru.yandex.practicum.interaction.api.model.comment.dto.CommentDto;
 import ru.yandex.practicum.interaction.api.model.event.dto.EventFullDto;
 
@@ -34,7 +35,6 @@ import java.util.Objects;
 @Validated
 public class EventPublicController {
     private final EventService eventsService;
-    private final StatsSaver statsSaver;
     private final String className = this.getClass().getSimpleName();
 
     @GetMapping
@@ -47,10 +47,7 @@ public class EventPublicController {
                                          @RequestParam(defaultValue = "false") Boolean onlyAvailable,
                                          @RequestParam(required = false) EventPublicSort sort,
                                          @RequestParam(defaultValue = "0") int from,
-                                         @RequestParam(defaultValue = "10") int size,
-                                         HttpServletRequest request) {
-        statsSaver.save(request, className);
-
+                                         @RequestParam(defaultValue = "10") int size) {
         PublicEventParam publicEventParam = new PublicEventParam();
         publicEventParam.setText(Objects.requireNonNullElse(text, ""));
         publicEventParam.setCategories(categories);
@@ -69,10 +66,9 @@ public class EventPublicController {
     @GetMapping("/{eventId}")
     @ResponseStatus(HttpStatus.OK)
     public EventFullDto getEventById(@PathVariable @PositiveOrZero @NotNull Long eventId,
-                                     HttpServletRequest request) {
-        statsSaver.save(request, className);
-        log.trace("{}: getEventById() call with eventId: {}", className, eventId);
-        return eventsService.getPublicEventById(eventId);
+                                     @RequestHeader("X-EWM-USER-ID") Long userId) {
+        log.trace("{}: getEventById() call with eventId: {} and userId: {}", className, eventId, userId);
+        return eventsService.getPublicEventById(userId, eventId);
     }
 
     @GetMapping("/{eventId}/comments")
@@ -83,5 +79,22 @@ public class EventPublicController {
         log.trace("{}: getCommentsByEvent() call with eventId: {}, from: {}, size: {}",
                 className, eventId, from, size);
         return eventsService.getCommentsByEvent(eventId, from, size);
+    }
+
+    @GetMapping("/recommendations")
+    @ResponseStatus(HttpStatus.OK)
+    public List<RecommendedEventDto> getRecommendations(@RequestHeader("X-EWM-USER-ID") Long userId, @RequestParam(defaultValue = "10") @Positive int size) {
+        log.trace("{}: getRecommendations() call with userId: {} and size: {}",
+                className, userId, size);
+        return eventsService.getRecommendations(userId, size);
+    }
+
+    @PutMapping("/{eventId}/like")
+    @ResponseStatus(HttpStatus.OK)
+    public void like(@PathVariable @PositiveOrZero @NotNull Long eventId,
+                     @RequestHeader("X-EWM-USER-ID") Long userId) {
+        log.trace("{}: like() call with eventId: {} and userId: {}",
+                className, eventId, userId);
+        eventsService.like(eventId, userId);
     }
 }

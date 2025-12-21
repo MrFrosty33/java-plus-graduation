@@ -62,10 +62,12 @@ public class EventAdminService {
 
         LocalDateTime startStats = eventList.getFirst().getCreatedOn().truncatedTo(ChronoUnit.SECONDS);
         LocalDateTime endStats = LocalDateTime.now().truncatedTo(ChronoUnit.SECONDS);
-        EventStatistics stats = eventService.getEventStatistics(eventList, startStats, endStats);
+        EventStatistics stats = eventService.getEventStatistics(eventList);
         List<EventFullDto> result = events.stream()
                 .map(event -> mapper.toFullDtoWithStats(event, stats))
                 .toList();
+
+        //todo заполнить rating через analyzer -> getInteractionsCount
         log.info("{}: result of search(): {}", className, result);
         return result;
     }

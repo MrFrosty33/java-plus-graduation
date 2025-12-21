@@ -6,6 +6,8 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import ru.practicum.ewm.stats.proto.ActionTypeProto;
+import ru.practicum.ewm.stats.proto.UserActionProto;
 import ru.yandex.practicum.interaction.api.exception.ConflictException;
 import ru.yandex.practicum.interaction.api.exception.NotFoundException;
 import ru.yandex.practicum.interaction.api.feign.EventClient;
@@ -22,6 +24,7 @@ import ru.yandex.practicum.interaction.api.model.request.ParticipationRequestSta
 import ru.yandex.practicum.interaction.api.util.DataProvider;
 import ru.yandex.practicum.interaction.api.util.ExistenceValidator;
 import ru.yandex.practicum.request.repository.ParticipationRequestRepository;
+import ru.yandex.practicum.stats.client.CollectorClient;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -40,6 +43,7 @@ public class ParticipationRequestServiceImpl implements ParticipationRequestServ
     private final UserClient userClient;
     private final EventClient eventClient;
     private final ParticipationRequestMapper participationRequestMapper;
+    private final CollectorClient collectorClient;
 
 
     @Override
@@ -152,6 +156,16 @@ public class ParticipationRequestServiceImpl implements ParticipationRequestServ
 
         ParticipationRequestDto result = getDto(participationRequestRepository.save(request));
         log.info("{}: result of create(): {}", className, result);
+
+        UserActionProto actionProto = UserActionProto.newBuilder()
+                .setUserId(newParticipationRequest.getUserId())
+                .setEventId(newParticipationRequest.getEventId())
+                .setActionType(ActionTypeProto.ACTION_REGISTER)
+                .build();
+        collectorClient.collectUserAction(actionProto);
+
+        log.info("{}: sent UserActionProto: {} to collector", className, actionProto);
+
         return result;
     }
 

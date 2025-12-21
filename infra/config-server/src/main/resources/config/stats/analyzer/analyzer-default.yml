@@ -1,0 +1,74 @@
+logging:
+  level:
+    root: INFO
+    ru.yandex.practicum.analyzer: TRACE
+
+grpc:
+  server:
+    port: 0
+    enableKeepAlive: true
+    keepAliveWithoutCalls: true
+    negotiationType: plaintext
+
+topics:
+  userActions: "stats.user-actions.v1"
+  eventsSimilarity: "stats.events-similarity.v1"
+
+nearest-neighbours:
+  value: 20
+
+action-weights:
+  view: 0.4
+  register: 0.8
+  like: 1.0
+
+kafka-analyzer:
+  user-actions-consumer:
+    properties:
+      bootstrap.servers: "localhost:9092"
+      group.id: "stats-analyzer-user-actions-consumers-v1"
+      key.deserializer: "org.apache.kafka.common.serialization.VoidDeserializer"
+      value.deserializer: "ru.yandex.practicum.kafka.serializer.UserActionDeserializer"
+
+      max.poll.records: 100
+      fetch.max.bytes: 3072000
+      max.partition.fetch.bytes: 307200
+
+      auto.offset.reset: "latest"
+      isolation.level: "read_committed"
+      enable.auto.commit: false
+
+  events-similarity-consumer:
+    properties:
+      bootstrap.servers: "localhost:9092"
+      group.id: "stats-analyzer-events-similarity-consumers-v1"
+      key.deserializer: "org.apache.kafka.common.serialization.VoidDeserializer"
+      value.deserializer: "ru.yandex.practicum.kafka.serializer.EventsSimilarityDeserializer"
+
+      max.poll.records: 100
+      fetch.max.bytes: 3072000
+      max.partition.fetch.bytes: 307200
+
+      auto.offset.reset: "latest"
+      isolation.level: "read_committed"
+      enable.auto.commit: false
+
+spring:
+  sql:
+    init:
+      mode: always
+  datasource:
+    driver-class-name: org.postgresql.Driver
+    url: jdbc:postgresql://localhost:6542/ewm_stats
+    username: stats
+    password: stats
+  jpa:
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health, info, metrics
