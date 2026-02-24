@@ -16,7 +16,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 import ru.yandex.practicum.explore.with.me.model.category.NewCategoryDto;
-import ru.yandex.practicum.explore.with.me.service.category.CategoryServiceImpl;
+import ru.yandex.practicum.explore.with.me.service.category.CategoryService;
 import ru.yandex.practicum.interaction.api.model.category.dto.CategoryDto;
 
 @RestController
@@ -26,7 +26,7 @@ import ru.yandex.practicum.interaction.api.model.category.dto.CategoryDto;
 @Slf4j
 public class CategoryAdminController {
     private final String className = this.getClass().getSimpleName();
-    private final CategoryServiceImpl categoryService;
+    private final CategoryService categoryService;
 
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
